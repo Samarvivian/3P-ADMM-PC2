@@ -107,7 +107,7 @@ def centralized_admm_lasso_gpu(A, y, x_true, rho=1.0, lamb=1.0, max_iter=100,
     return history_x, mse_list
 
 
-def experiment_and_plot_gpu(seed=42, M=200, N=600, sparsity=0.1,
+def experiment_and_plot_gpu(seed=42, M=300, N=27000, sparsity=0.1,
                             rho=1.0, lamb=0.1, noise_sigma=0.01, max_iter=100,
                             solver_pref='auto', dtype=cp.float32):
     np.random.seed(seed)
@@ -155,8 +155,8 @@ def experiment_and_plot_gpu(seed=42, M=200, N=600, sparsity=0.1,
 if __name__ == "__main__":
     _mse = experiment_and_plot_gpu(
         seed=42,
-        M=200,
-        N=1600,
+        M=300,
+        N=27000,
         sparsity=0.1,
         rho=1.0,
         lamb=0.1,
