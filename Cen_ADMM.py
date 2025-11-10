@@ -1,7 +1,7 @@
 # centralized_admm_gpu.py
 """
 Centralized ADMM for LASSO (GPU-driven via CuPy).
-Now saves result files to project root (PyCharm auto-sync to local).
+Now tracks both primal residual (x-z) and reconstruction error (x-x_true).
 """
 
 import os
@@ -63,8 +63,10 @@ def centralized_admm_lasso_gpu(A, y, x_true, rho=1.0, lamb=1.0, max_iter=100,
     x = cp.zeros(N, dtype=dtype)
     z = cp.zeros(N, dtype=dtype)
     v = cp.zeros(N, dtype=dtype)
+
     history_x = []
-    mse_list = []
+    primal_residual_list = []
+    recon_error_list = []
 
     Aty = A.T @ y
 
@@ -98,16 +100,21 @@ def centralized_admm_lasso_gpu(A, y, x_true, rho=1.0, lamb=1.0, max_iter=100,
         z = soft_threshold(v + x, lamb / rho)
         v = v + x - z
 
+        # === Metrics ===
+        primal_res = float(cp.linalg.norm(x - z))                # 原始残差 ||x - z||
+        recon_err = float(cp.linalg.norm(x - x_true))            # 重构误差 ||x - x_true||
+        primal_residual_list.append(primal_res)
+        recon_error_list.append(recon_err)
+
         history_x.append(cp.asnumpy(x))
-        mse = float(cp.asnumpy(cp.mean((x - x_true) ** 2)))
-        mse_list.append(mse)
+
         free, total = gpu_mem_info()
-        print(f"[ITER {t:03d}] MSE={mse:.6e} | solver={chosen_solver} | time={cg_time:.3f}s | free={free/1e9:.2f}GB")
+        print(f"[ITER {t:03d}] PrimalRes={primal_res:.3e} | ReconErr={recon_err:.3e} | solver={chosen_solver} | time={cg_time:.3f}s | free={free/1e9:.2f}GB")
 
-    return history_x, mse_list
+    return history_x, primal_residual_list, recon_error_list
 
 
-def experiment_and_plot_gpu(seed=42, M=200, N=600, sparsity=0.1,
+def experiment_and_plot_gpu(seed=42, M=300, N=27000, sparsity=0.1,
                             rho=1.0, lamb=0.1, noise_sigma=0.01, max_iter=100,
                             solver_pref='auto', dtype=cp.float32):
     np.random.seed(seed)
@@ -122,41 +129,43 @@ def experiment_and_plot_gpu(seed=42, M=200, N=600, sparsity=0.1,
     y = cp.asarray(y_cpu, dtype=dtype)
     x_true = cp.asarray(x_true_cpu, dtype=dtype)
 
-    hist_x, mse = centralized_admm_lasso_gpu(
+    hist_x, primal_residual, recon_error = centralized_admm_lasso_gpu(
         A, y, x_true, rho=rho, lamb=lamb, max_iter=max_iter,
         solver_pref=solver_pref, dtype=dtype
     )
 
-
+    # 保存路径
     project_dir = os.getcwd()
     ts = time.strftime("%Y%m%d_%H%M%S")
-    save_path = os.path.join(project_dir, f"Cen-ADMM-GPU_{ts}.png")
-    npy_path = os.path.join(project_dir, f"Cen-ADMM-MSE-GPU_{ts}.npy")
+    fig_path = os.path.join(project_dir, f"Cen-ADMM-GPU_{ts}.png")
+    np.save(os.path.join(project_dir, f"PrimalResidual_{ts}.npy"), np.array(primal_residual))
+    np.save(os.path.join(project_dir, f"ReconError_{ts}.npy"), np.array(recon_error))
 
-    # 绘图与保存
-    plt.figure(figsize=(8,4))
-    plt.semilogy(range(1, len(mse)+1), mse, label='Centralized ADMM (GPU)')
+    # === 绘图 ===
+    plt.figure(figsize=(8, 4))
+    plt.semilogy(range(1, len(primal_residual)+1), primal_residual, label='Primal Residual ||x - z||')
+    plt.semilogy(range(1, len(recon_error)+1), recon_error, label='Reconstruction Error ||x - x_true||')
     plt.xlabel('Iteration')
-    plt.ylabel('MSE (mean squared error)')
-    plt.title('Centralized ADMM (GPU) — MSE vs Iteration')
+    plt.ylabel('Norm value (log scale)')
+    plt.title('Centralized ADMM (GPU) — Residual & Reconstruction Error')
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300)
-    np.save(npy_path, np.array(mse))
-
-    print(f"[Saved] Plot → {save_path}")
-    print(f"[Saved] MSE  → {npy_path}")
-    print(f"Final MSE after {max_iter} iterations: {mse[-1]:.3e}")
+    plt.savefig(fig_path, dpi=300)
     plt.show()
-    return mse
+
+    print(f"[Saved] Figure → {fig_path}")
+    print(f"Final primal residual: {primal_residual[-1]:.3e}")
+    print(f"Final reconstruction error: {recon_error[-1]:.3e}")
+
+    return primal_residual, recon_error
 
 
 if __name__ == "__main__":
-    _mse = experiment_and_plot_gpu(
+    _primal, _recon = experiment_and_plot_gpu(
         seed=42,
-        M=200,
-        N=1600,
+        M=300,
+        N=27000,
         sparsity=0.1,
         rho=1.0,
         lamb=0.1,
