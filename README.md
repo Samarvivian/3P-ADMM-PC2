@@ -61,7 +61,7 @@
 运行方式：
 
 ```bash
-python Cen-ADMM.py
+python Cen_ADMM.py
 ```
 
 示例输出：
