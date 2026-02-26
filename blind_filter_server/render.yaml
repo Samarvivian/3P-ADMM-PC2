@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: blind-filter-edge
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:10000
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
