@@ -109,6 +109,7 @@ def _check_gpu_and_prompt(root: tk.Tk) -> None:
     threading.Thread(target=_worker, daemon=True).start()
 
 
+
 def _show_cupy_dialog(root: tk.Tk, gpu_name: str, cuda_ver, error_msg: str = "") -> None:
     """Dialog that explains CuPy and offers to install it."""
     zh = i18n.get_lang() == "zh"
