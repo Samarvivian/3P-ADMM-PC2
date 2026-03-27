@@ -2,14 +2,14 @@
 
 ## 节点信息
 
-| 节点 | 角色 | hostname | Host | 端口（每次变化） |
-|------|------|----------|------|----------------|
-| 主节点 | Master · RTX A4000 | Z9kMJk | hz-t3.matpool.com | 见控制台 |
-| edge1 | 边缘节点1 · RTX A2000 | ZBOj8J | hz-t3.matpool.com | 见控制台 |
-| edge2 | 边缘节点2 · RTX A2000 | P6kMbo | hz-t3.matpool.com | 见控制台 |
-| edge3 | 边缘节点3 · RTX A2000 | w0kmWy | hz-4.matpool.com | 见控制台 |
+| 节点 | 角色 | GPU | Host | 端口（每次变化） |
+|------|------|-----|------|----------------|
+| 主节点 | Master | RTX A4000 | hz-t3.matpool.com | 见控制台 |
+| edge1 | 边缘节点1 | RTX A2000 | 见控制台（每次可能变） | 见控制台 |
+| edge2 | 边缘节点2 | RTX A2000 | 见控制台（每次可能变） | 见控制台 |
+| edge3 | 边缘节点3 | RTX A2000 | 见控制台（每次可能变） | 见控制台 |
 
-> 注意：每次重新开机后端口都会重新分配，需要去矩池云控制台查看最新端口。
+> 重要：不只是端口会变，Host（hz-t3 还是 hz-4）每次开机也可能变，一定要以控制台显示为准。
 
 ---
 
@@ -19,45 +19,62 @@
 
 去矩池云控制台，四台实例全部点开机，等待状态变成"运行中"。
 
-### 第二步：记录新端口
+### 第二步：记录四台的Host和端口
 
-点开每台实例详情页，记录SSH端口，填入下表：
+点开每台实例详情页 → SSH标签，记录Host和Port，填入下表：
 
 | 节点 | Host | 本次端口 |
 |------|------|---------|
-| 主节点 | hz-t3.matpool.com | |
-| edge1 | hz-t3.matpool.com | |
-| edge2 | hz-t3.matpool.com | |
-| edge3 | hz-4.matpool.com | |
+| 主节点 | | |
+| edge1 | | |
+| edge2 | | |
+| edge3 | | |
 
 ### 第三步：MobaXterm连接四台
 
-每台操作：Session → SSH → 填入host和新端口 → 输密码连上。
+每台操作：Session → SSH → 填入本次Host和Port → 输密码连上。
 
-### 第四步：更新主节点SSH config
+### 第四步：恢复SSH密钥软链接
 
-在主节点终端执行（替换端口号为本次实际端口）：
+密钥存在/mnt下不会丢失，但每次开机需要重新软链接。
+
+在主节点执行：
+
+```bash
+ln -sf /mnt/ssh_keys/id_rsa ~/.ssh/id_rsa
+ln -sf /mnt/ssh_keys/id_rsa.pub ~/.ssh/id_rsa.pub
+```
+
+验证密钥存在：
+
+```bash
+ls -la ~/.ssh/id_rsa
+```
+
+### 第五步：更新主节点SSH config
+
+在主节点执行（用本次实际Host和端口替换）：
 
 ```bash
 cat > ~/.ssh/config << EOF
 Host edge1
-    HostName hz-t3.matpool.com
-    Port 新端口1
+    HostName 本次edge1的Host
+    Port 本次edge1的端口
     User root
 
 Host edge2
-    HostName hz-t3.matpool.com
-    Port 新端口2
+    HostName 本次edge2的Host
+    Port 本次edge2的端口
     User root
 
 Host edge3
-    HostName hz-4.matpool.com
-    Port 新端口3
+    HostName 本次edge3的Host
+    Port 本次edge3的端口
     User root
 EOF
 ```
 
-### 第五步：重新配置免密登录
+### 第六步：重新配置免密登录
 
 ```bash
 ssh-copy-id edge1
@@ -65,21 +82,36 @@ ssh-copy-id edge2
 ssh-copy-id edge3
 ```
 
-每条输一次密码，看到 `Number of key(s) added: 1` 或 `All keys were skipped` 都说明成功。
+每条输一次密码，看到以下任意一条都说明成功：
+- `Number of key(s) added: 1`
+- `All keys were skipped because they already exist`
 
-### 第六步：更新 config.py
+### 第七步：更新 config.py
 
 ```bash
-cat > ~/config.py << EOF
+cat > /mnt/3p-admm-pc2/config.py << EOF
+# 节点连接配置（每次开机后更新）
 NODES = {
-    'edge1': {'host': 'hz-t3.matpool.com', 'port': 新端口1},
-    'edge2': {'host': 'hz-t3.matpool.com', 'port': 新端口2},
-    'edge3': {'host': 'hz-4.matpool.com',  'port': 新端口3},
+    'edge1': {'host': '本次edge1的Host', 'port': 本次edge1的端口},
+    'edge2': {'host': '本次edge2的Host', 'port': 本次edge2的端口},
+    'edge3': {'host': '本次edge3的Host', 'port': 本次edge3的端口},
 }
+
+# ADMM参数
+RHO = 1.0
+LAMBDA = 1.0
+MAX_ITER = 100
+TOL = 1e-4
+
+# 实验参数
+M = 3000
+N = 27000
+K = 3
+SPARSITY = 0.1
 EOF
 ```
 
-### 第七步：验证连通
+### 第八步：验证连通
 
 ```bash
 ssh edge1 "hostname"
@@ -87,15 +119,22 @@ ssh edge2 "hostname"
 ssh edge3 "hostname"
 ```
 
-三台分别返回 `ZBOj8J`、`P6kMbo`、`w0kmWy` 说明全部连通，可以开始写代码。
+三台各返回一个hostname说明全部连通，可以开始写代码。
 
 ---
 
 ## 注意事项
 
 - **代码和数据必须存在 `/mnt` 目录下**，否则关机后丢失
-- 每次开机后记得把最新代码从GitHub拉取：`git pull`
-- 长时间运行的任务用 `tmux` 或 `nohup` 挂到后台，防止SSH断开导致任务中断
+- **SSH密钥存在 `/mnt/ssh_keys/`**，每次开机执行第四步软链接恢复
+- **Host和端口每次都可能变**，不要用上次的，以控制台为准
+- 长时间运行的任务用 `tmux` 挂到后台，防止SSH断开导致任务中断：
+
+```bash
+tmux new -s main      # 新建session
+tmux attach -t main   # 重新连接session
+```
+
 - 用完记得去控制台**停止并释放**实例，避免继续计费
 
 ---
@@ -106,6 +145,7 @@ ssh edge3 "hostname"
 
 - [ ] 四台实例全部运行中
 - [ ] MobaXterm四个标签页全部连上
+- [ ] `/mnt/ssh_keys/id_rsa` 软链接已恢复
+- [ ] `~/.ssh/config` 已更新为本次Host和端口
 - [ ] `ssh edge1/edge2/edge3 "hostname"` 全部返回正确hostname
-- [ ] `~/config.py` 端口已更新
-- [ ] 代码已从GitHub拉取最新版本
+- [ ] `/mnt/3p-admm-pc2/config.py` 端口已更新
