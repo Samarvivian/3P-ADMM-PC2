@@ -1,10 +1,9 @@
 # 节点连接配置（每次开机后更新）
 NODES = {
-    'edge1': {'host': '本次edge1的Host', 'port': 26610},
-    'edge2': {'host': '本次edge2的Host', 'port': 26942},
-    'edge3': {'host': '本次edge3的Host', 'port': 27274},
+    'edge1': {'host': 'hz-4.matpool.com', 'port': 27920},
+    'edge2': {'host': 'hz-4.matpool.com', 'port': 27304},
+    'edge3': {'host': 'hz-4.matpool.com', 'port': 26688},
 }
-
 
 # ADMM参数
 RHO = 1.0
