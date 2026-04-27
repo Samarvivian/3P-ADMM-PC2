@@ -7,6 +7,13 @@ import tempfile
 import os
 sys.path.append('/mnt/3p-admm-pc2')
 from crypto.paillier import generate_keypair, encrypt, decrypt, homo_add, homo_mul_const
+try:
+    from crypto.paillier_gpu import encrypt_batch_gpu
+    USE_GPU = True
+    print('GPU加密已启用')
+except Exception as e:
+    USE_GPU = False
+    print(f'GPU加密不可用，使用CPU: {e}')
 from crypto.quantization import gamma1
 
 def soft_threshold(x, threshold):
@@ -74,7 +81,10 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
     B_bar_qs = []
     for k in range(K):
         q_alpha = quantize1(alpha_ks[k], delta, ZMIN, ZMAX)
-        alpha_hat = [encrypt(int(qi), pub) for qi in q_alpha]
+        if USE_GPU:
+            alpha_hat = encrypt_batch_gpu([int(qi) for qi in q_alpha], pub)
+        else:
+            alpha_hat = [encrypt(int(qi), pub) for qi in q_alpha]
         alpha_hats.append(alpha_hat)
 
         q_B = quantize2(np.diag(B_blocks[k]), delta, ZMIN, ZMAX)

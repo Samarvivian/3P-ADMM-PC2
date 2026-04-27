@@ -63,7 +63,7 @@ __global__ void sub_correct(uint32_t *x, uint32_t *qn, uint32_t *r,
                              uint32_t *n, int N) {
     int t=blockIdx.x*blockDim.x+threadIdx.x;
     if(t>=N) return;
-    uint32_t *px=x+t*LEN,*pqn=qn+t*LEN;
+    uint32_t *px=x+t*2*LEN,*pqn=qn+t*2*LEN;  // x和qn是2*LEN stride
     uint32_t *pr=r+t*LEN,*pn=n+t*LEN;
     int64_t borrow=0;
     for(int i=0;i<LEN;i++){
