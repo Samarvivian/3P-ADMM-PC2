@@ -1,30 +1,38 @@
 # 3P-ADMM-PC2-GUI
 
-基于 ADMM 算法的稀疏信号重建系统，支持集中式、分布式、加密三种模式，提供图形界面。
+基于 ADMM 算法的稀疏信号重建系统，支持分布式、加密分布式两种模式，提供图形界面。
 
 ## 使用方式
 
-### 直接运行（推荐）
+### 方式一：打包成 exe 运行
 
-下载 `3P-ADMM-PC2.exe`，双击运行，无需安装 Python 或任何依赖。
+```powershell
+# 安装依赖
+pip install -r requirements.txt
 
-GPU 加速（可选）：有 NVIDIA GPU 的用户可安装 CuPy，程序会自动检测并使用。
+# 打包
+.\build_windows.bat
+```
+打包完成后默认放在 `dist/3P-ADMM-PC2.exe` ，双击即可运行
+
+### 方式二：从源码运行
+
+```powershell
+# 安装依赖
+pip install -r requirements.txt
+
+# 运行
+python src/main.py
+```
+
+### GPU 加速（可选）：有 NVIDIA GPU 的用户可安装 CuPy，程序会自动检测并使用。
 ```
 pip install cupy-cuda12x
 ```
 
-### 从源码运行
-
-```bash
-pip install -r requirements.txt
-python src/main.py
-```
-
 ## 运行模式
-
-- **集中式**：单机运行，直接加载数据计算
 - **分布式**：多台电脑通过局域网协同计算，一台运行 Master，其余运行 Edge
-- **加密**：分布式基础上加入 Paillier 同态加密保护数据隐私
+- **加密分布式**：分布式基础上加入 Paillier 同态加密保护数据隐私
 
 ## 分布式使用步骤
 
@@ -42,12 +50,5 @@ src/
 ├── api/edge_server.py   # Edge 节点 Flask 服务
 ├── network/client.py    # Master→Edge HTTP 通信
 └── utils/gpu.py         # GPU 加速（CuPy/NumPy 自动切换）
-```
-
-## 打包生成exe文件后运行
-
-运行下面的指令生成exe文件后双击运行
-```powershell
-.\build_windows.bat
 ```
 
