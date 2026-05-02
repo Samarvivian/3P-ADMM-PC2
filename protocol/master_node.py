@@ -14,6 +14,13 @@ try:
 except Exception as e:
     USE_GPU = False
     print(f'GPU加密不可用，使用CPU: {e}')
+try:
+    from crypto.paillier_gpu import encrypt_batch_gpu
+    USE_GPU = True
+    print('GPU加密已启用')
+except Exception as e:
+    USE_GPU = False
+    print(f'GPU加密不可用，使用CPU: {e}')
 from crypto.quantization import gamma1
 
 def soft_threshold(x, threshold):
@@ -60,14 +67,27 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
     print("【初始化】生成密钥...")
     pub, priv = generate_keypair(bits=bits)
 
-    print("【初始化】预计算各节点矩阵...")
+    print("【初始化】发送Ak给边缘节点，由边缘节点计算Bk...")
+    for k in range(K):
+        init_data = {'Ak': A_blocks[k], 'y': y, 'rho': rho}
+        send_to_edge(nodes[k]['host'], nodes[k]['port'],
+                     init_data, f'/mnt/init_data_k{k}.pkl')
+    procs = []
+    for k in range(K):
+        cmd = f"/root/miniconda3/envs/myconda/bin/python3 /mnt/3p-admm-pc2/protocol/edge_init.py {k}"
+        proc = subprocess.Popen(['ssh', '-p', str(nodes[k]['port']),
+            f"root@{nodes[k]['host']}", cmd])
+        procs.append(proc)
+    for proc in procs:
+        proc.wait()
     B_blocks = []
     alpha_ks = []
     for k in range(K):
-        Ak = A_blocks[k]
-        Bk = inv(Ak.T @ Ak + rho * np.eye(Nk))
-        B_blocks.append(Bk)
-        alpha_ks.append(Bk @ (Ak.T @ y))
+        result = recv_from_edge(nodes[k]['host'], nodes[k]['port'],
+            f'/mnt/init_result_k{k}.pkl', f'/tmp/init_result_k{k}.pkl')
+        B_blocks.append(result['Bk'])
+        alpha_ks.append(result['alpha_k'])
+        print(f'  边缘节点{k} Bk计算完成')
 
     # 量化范围
     all_vals = np.concatenate([alpha_ks[k] for k in range(K)] +
@@ -93,12 +113,11 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
         data = {
             'pub': pub,
             'alpha_hat': alpha_hat,
-            'B_k': B_blocks[k],  # 完整矩阵
+            'B_k': B_blocks[k] if Nk <= 100 else np.diag(B_blocks[k]),  # 小规模完整，大规模对角
             'rho': rho,
             'delta': delta,
             'ZMIN': ZMIN,
             'ZMAX': ZMAX,
-            'A_block': A_blocks[k],
         }
         send_to_edge(nodes[k]['host'], nodes[k]['port'],
                      data, f'/mnt/edge_data_k{k}.pkl')
@@ -151,10 +170,14 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
             scale      = (ZMAX - ZMIN)**2 / delta**2
             # 反量化公式（推导自Theorem 1）：
             # correction = ZMIN + ZMIN*sum(zk-vk) + 2*ZMIN*B_rowsum - 2*ZMIN^2*Nk
-            Nk = len(zk)
-            B_row_sum = B_blocks[k].sum(axis=1)
+            Nk_local = len(zk)
+            # 小规模用完整矩阵行和，大规模用对角近似
+            if Nk_local <= 100:
+                B_row_sum = B_blocks[k].sum(axis=1)
+            else:
+                B_row_sum = np.diag(B_blocks[k])
             zv_sum = np.sum(zk - vk)
-            correction = ZMIN + ZMIN*zv_sum + 2*ZMIN*B_row_sum - 2*ZMIN**2*Nk
+            correction = ZMIN + ZMIN*zv_sum + 2*ZMIN*B_row_sum - 2*ZMIN**2*Nk_local
             xk         = decrypted * scale + correction
             x_new[k*Nk:(k+1)*Nk] = xk
 
@@ -172,4 +195,4 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
             print(f"第 {t} 轮收敛")
             break
 
-    return x, mse_list
+    return x, mse_list, B_blocks, alpha_ks

@@ -25,7 +25,7 @@ nodes = [
 
 print("="*50)
 print("运行分布式 3P-ADMM-PC2...")
-_, mse_pc2 = run_distributed(A, y, nodes, K=K, rho=1.0, lam=0.05,
+_, mse_pc2, _, _ = run_distributed(A, y, nodes, K=K, rho=1.0, lam=0.05,
                                max_iter=100, delta=10**10, bits=1024)
 
 print("="*50)
