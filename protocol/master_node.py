@@ -72,8 +72,8 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
     # 量化范围
     all_vals = np.concatenate([alpha_ks[k] for k in range(K)] +
                                [np.diag(B_blocks[k]) for k in range(K)])
-    ZMIN = all_vals.min() - abs(all_vals.min()) * 0.5
-    ZMAX = all_vals.max() + abs(all_vals.max()) * 0.5
+    ZMIN = -2.0
+    ZMAX = 2.0
 
     # 数据安全共享阶段
     print("【数据安全共享】发送加密数据到边缘节点...")
@@ -87,14 +87,14 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
             alpha_hat = [encrypt(int(qi), pub) for qi in q_alpha]
         alpha_hats.append(alpha_hat)
 
-        q_B = quantize2(np.diag(B_blocks[k]), delta, ZMIN, ZMAX)
-        B_bar_qs.append(q_B)
+        B_bar_qs.append(np.diag(B_blocks[k]))  # 保留对角用于反量化
 
-        # 发送到边缘节点
+        # 发送到边缘节点（包含完整Bk矩阵）
         data = {
             'pub': pub,
             'alpha_hat': alpha_hat,
-            'B_bar_q': q_B,
+            'B_k': B_blocks[k],  # 完整矩阵
+            'rho': rho,
             'delta': delta,
             'ZMIN': ZMIN,
             'ZMAX': ZMAX,
@@ -114,8 +114,8 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
         # 发送 zk, vk 给各边缘节点并触发计算
         for k in range(K):
             iter_data = {
-                'zk': z[k*Nk:(k+1)*Nk],
-                'vk': v[k*Nk:(k+1)*Nk],
+                'zk': rho * z[k*Nk:(k+1)*Nk],  # 乘以rho
+                'vk': rho * v[k*Nk:(k+1)*Nk],  # 乘以rho
                 't': t,
             }
             send_to_edge(nodes[k]['host'], nodes[k]['port'],
@@ -143,13 +143,18 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
                 f'/tmp/result_k{k}.pkl'
             )
             x_hat_k = result['x_hat_k']
-            zk = z[k*Nk:(k+1)*Nk]
-            vk = v[k*Nk:(k+1)*Nk]
+            zk = rho * z[k*Nk:(k+1)*Nk]  # 和发送给边缘节点的一致
+            vk = rho * v[k*Nk:(k+1)*Nk]  # 和发送给边缘节点的一致
             Bk_diag = np.diag(B_blocks[k])
 
             decrypted  = np.array([decrypt(c, priv) for c in x_hat_k], dtype=float)
             scale      = (ZMAX - ZMIN)**2 / delta**2
-            correction = (2 * Bk_diag + (zk - (-vk)) + 1) * ZMIN - 2 * ZMIN**2
+            # 反量化公式（推导自Theorem 1）：
+            # correction = ZMIN + ZMIN*sum(zk-vk) + 2*ZMIN*B_rowsum - 2*ZMIN^2*Nk
+            Nk = len(zk)
+            B_row_sum = B_blocks[k].sum(axis=1)
+            zv_sum = np.sum(zk - vk)
+            correction = ZMIN + ZMIN*zv_sum + 2*ZMIN*B_row_sum - 2*ZMIN**2*Nk
             xk         = decrypted * scale + correction
             x_new[k*Nk:(k+1)*Nk] = xk
 
