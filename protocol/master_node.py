@@ -54,7 +54,7 @@ def recv_from_edge(host, port, remote_path, local_path):
         return pickle.load(f)
 
 def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
-                    max_iter=100, delta=10**10, bits=1024):
+                    max_iter=100, delta=10**10, bits=1024, x_true=None):
     """
     分布式3P-ADMM-PC2
     nodes: [{'host':..., 'port':...}, ...]
@@ -92,8 +92,8 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
     # 量化范围
     all_vals = np.concatenate([alpha_ks[k] for k in range(K)] +
                                [np.diag(B_blocks[k]) for k in range(K)])
-    ZMIN = -2.0
-    ZMAX = 2.0
+    ZMIN = -3.0
+    ZMAX = 3.0
 
     # 数据安全共享阶段
     print("【数据安全共享】发送加密数据到边缘节点...")
@@ -171,13 +171,15 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
             # 反量化公式（推导自Theorem 1）：
             # correction = ZMIN + ZMIN*sum(zk-vk) + 2*ZMIN*B_rowsum - 2*ZMIN^2*Nk
             Nk_local = len(zk)
-            # 小规模用完整矩阵行和，大规模用对角近似
             if Nk_local <= 100:
+                # 小规模：完整矩阵，correction用行和
                 B_row_sum = B_blocks[k].sum(axis=1)
+                zv_sum = np.sum(zk - vk)
+                correction = ZMIN + ZMIN*zv_sum + 2*ZMIN*B_row_sum - 2*ZMIN**2*Nk_local
             else:
-                B_row_sum = np.diag(B_blocks[k])
-            zv_sum = np.sum(zk - vk)
-            correction = ZMIN + ZMIN*zv_sum + 2*ZMIN*B_row_sum - 2*ZMIN**2*Nk_local
+                # 大规模：对角近似，correction逐元素
+                B_diag = np.diag(B_blocks[k])
+                correction = ZMIN*(1 + 2*(B_diag-ZMIN) + (zk-vk))
             xk         = decrypted * scale + correction
             x_new[k*Nk:(k+1)*Nk] = xk
 
@@ -185,7 +187,10 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
         z = soft_threshold(v + x, lam / rho)
         v = v + x - z
 
-        mse = np.mean((A @ x - y) ** 2)
+        if x_true is not None:
+            mse = np.mean((x - x_true) ** 2)
+        else:
+            mse = np.mean((A @ x - y) ** 2)
         mse_list.append(mse)
 
         if t % 10 == 0:
