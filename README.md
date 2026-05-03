@@ -1,6 +1,6 @@
 # 3P-ADMM-PC2：分布式隐私计算框架复现
 
-参考论文《Parallel Collaborative ADMM Privacy Computing and Adaptive GPU Acceleration for Distributed Edge Networks》https://ieeexplore.ieee.org/document/11340748，实现了一个基于Paillier同态加密的分布式ADMM隐私计算框架和GPU加速方案。
+参考论文《Parallel Collaborative ADMM Privacy Computing and Adaptive GPU Acceleration for Distributed Edge Networks》https://ieeexplore.ieee.org/document/11340748， 实现了一个基于Paillier同态加密的分布式ADMM隐私计算框架和GPU加速方案。
 该项目已获得全国第十届密码技术竞赛三等奖。
 ---
 
