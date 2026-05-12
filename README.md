@@ -1,7 +1,6 @@
 # 3P-ADMM-PC2：分布式隐私计算框架复现
 
-参考论文《Parallel Collaborative ADMM Privacy Computing and Adaptive GPU Acceleration for Distributed Edge Networks》https://ieeexplore.ieee.org/document/11340748， 实现了一个基于Paillier同态加密的分布式ADMM隐私计算框架和GPU加速方案。
-该项目已获得全国第十届密码技术竞赛三等奖。
+本项目实现了基于Paillier同态加密的分布式ADMM（交替方向乘子法）隐私计算框架，并结合GPU加速技术，支持大规模数据的高效分布式优化。项目包含中心化与分布式ADMM算法、同态加密与量化模块、GPU大整数运算加速、以及丰富的实验脚本，适用于多方协作、隐私保护和高性能计算等场景。用户可根据实际需求灵活选择计算模式，并通过实验脚本进行算法性能验证和效果对比。项目结构清晰，易于扩展和集成，能够为分布式优化与隐私计算提供高效、可扩展的解决方案。该项目已获得中国密码技术竞赛三等奖。
 ---
 
 ## 目录
@@ -277,5 +276,9 @@ correction = ZMIN * (1 + 2*(B_diag - ZMIN) + (zk - vk))
 5. **对角近似**：大规模下同态矩阵乘法计算量为O(Nk²)不可行，使用对角近似；当A为高斯随机矩阵时非对角元素/对角元素≈0.37%，近似误差可忽略
 
 
-# 致谢
-该项目由本人历时五个月完成，前后历经不少挫折，在此由衷感谢提供idea和论文指导的师兄，也欢迎各位提出issue或pull request,为该项目的精进贡献力量！
+项目署名
+本项目的作者及单位：
+
+项目名称（Project Name）：3P-ADMM-PC2
+项目作者（Author）：Weiwei Huang,Cancan Jin,Hao Liu,Tingwen Liu,Donghong Cai
+作者单位（Affiliation）：暨南大学网络空间安全学院（College of Cyber Security, Jinan University）
