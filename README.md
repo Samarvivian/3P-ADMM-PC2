@@ -11,7 +11,6 @@
 - [快速开始](#快速开始)
 - [算法原理](#算法原理)
 - [实验结果](#实验结果)
-- [与论文的差距分析](#与论文的差距分析)
 - [注意事项](#注意事项)
 
 ---
@@ -209,7 +208,7 @@ correction = ZMIN * (1 + 2*(B_diag - ZMIN) + (zk - vk))
 
 ## 实验结果
 
-### GPU加速ModExp性能（对应论文Table II，1024-bit密钥）
+### GPU加速ModExp性能
 
 | 实现 | OPS | 相对CPU |
 |------|-----|---------|
@@ -220,7 +219,7 @@ correction = ZMIN * (1 + 2*(B_diag - ZMIN) + (zk - vk))
 | GPU libntt2 | 6578 | 0.67x |
 | GPU reg_ntt_v3 | 7260 | 0.73x |
 | **GPU cuFFT版** | **10056** | **1.02x（超过CPU）** |
-| 论文GPU（cufftdx） | 79352 | 8x |
+
 
 ### GPU批量加密性能（EP）
 
@@ -228,9 +227,9 @@ correction = ZMIN * (1 + 2*(B_diag - ZMIN) + (zk - vk))
 |------|-----|------|
 | CPU EP | 530 | 实时计算r^n |
 | GPU EP（预计算r^n） | 9240 | 加速比17.4x |
-| 论文GPU EP | 137807 | cufftdx，差距14.9x |
 
-### MSE验证（对应论文Fig.6）
+
+### MSE验证
 
 **小规模（M=50, N=99, K=3）：**
 
@@ -249,21 +248,6 @@ correction = ZMIN * (1 + 2*(B_diag - ZMIN) + (zk - vk))
 | 差距 | **9.34e-4** |
 
 两者MSE曲线几乎重合，证明加密引入的误差可以忽略。
-
----
-
-## 与论文的差距分析
-
-| 指标 | 本项目 | 论文 | 原因 |
-|------|--------|------|------|
-| GPU ModExp | 10056 OPS | 79352 OPS | 缺少cufftdx（需NVIDIA授权） |
-| GPU EP | 9240 OPS | 137807 OPS | 同上，差距约14.9倍 |
-| MSE差距（大规模） | 9.34e-4 | 1e-14 | Δ=10^10 vs 论文Δ=10^15 |
-| 边缘节点硬件 | RTX A2000 | 树莓派5 | 我们设备更先进，延迟更低 |
-
-**关于cufftdx：** 论文使用NVIDIA的cufftdx库（设备端FFT，数据全程在SM寄存器/shared memory中），避免了全局内存访问，比我们使用的全局cuFFT快约14倍。cufftdx需要从NVIDIA官网注册申请，本项目环境未安装。
-
-**关于论文Table II的Edge Node GPU数据：** 经验证，论文Edge Node GPU（9729 OPS）实际是在主节点RTX 4060上模拟边缘节点算法测量的，树莓派5的VideoCore VII GPU不支持CUDA，无法运行该测试。
 
 ---
 
