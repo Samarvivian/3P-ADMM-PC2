@@ -260,9 +260,9 @@ correction = ZMIN * (1 + 2*(B_diag - ZMIN) + (zk - vk))
 5. **对角近似**：大规模下同态矩阵乘法计算量为O(Nk²)不可行，使用对角近似；当A为高斯随机矩阵时非对角元素/对角元素≈0.37%，近似误差可忽略
 
 
-项目署名
-本项目的作者及单位：
+## 项目署名
+### 本项目的作者及单位：
 
-项目名称（Project Name）：3P-ADMM-PC2
-项目作者（Author）：Weiwei Huang,Cancan Jin,Hao Liu,Tingwen Liu,Donghong Cai
-作者单位（Affiliation）：暨南大学网络空间安全学院（College of Cyber Security, Jinan University）
+### 项目名称（Project Name）：3P-ADMM-PC2
+### 项目作者（Author）：Weiwei Huang,Cancan Jin,Hao Liu,Tingwen Liu,Donghong Cai
+### 作者单位（Affiliation）：暨南大学网络空间安全学院（College of Cyber Security, Jinan University）
