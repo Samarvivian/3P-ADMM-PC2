@@ -244,6 +244,12 @@
             <label>最大迭代次数</label>
             <input type="number" id="max_iter" value="100" min="1">
 
+            <label>主节点计算方式</label>
+            <select id="compute_mode" style="width:100%;padding:10px;border:1px solid #d0d7de;border-radius:8px;margin-bottom:10px;font-size:1rem;">
+                <option value="cpu">仅CPU</option>
+                <option value="gpu">CPU+GPU加速</option>
+            </select>
+
             <button type="submit" id="submitBtn">上传并计算</button>
         </form>
         <div class="progress-bar-bg" id="progressBg">
@@ -371,6 +377,7 @@
         formData.append('rho', document.getElementById('rho').value);
         formData.append('lam', document.getElementById('lam').value);
         formData.append('max_iter', document.getElementById('max_iter').value);
+        formData.append('compute_mode', document.getElementById('compute_mode').value);
 
         // 模拟进度条
         let progress = 0;
