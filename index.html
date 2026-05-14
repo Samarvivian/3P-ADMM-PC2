@@ -222,36 +222,46 @@
     <div style="background:linear-gradient(90deg,#e0f2fe 60%,#f0f6ff 100%);border-left:4px solid #2d7ff9;padding:16px 18px 14px 18px;border-radius:8px;color:#234;margin-bottom:22px;font-size:1.08rem;">
         本系统面向无人机等物联网场景，集成了分布式隐私保护ADMM优化算法，支持同态加密与高效数据处理。用户可上传特征数据，系统将自动完成分布式隐私计算并展示收敛曲线，保障数据安全与智能协作。
     </div>
-    <form id="uploadForm">
-        <label>上传特征数据（npy/csv）</label>
-        <input type="file" id="dataFile" accept=".npy,.csv" required>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="flex:1;min-width:220px;">
+        <form id="uploadForm">
+            <label>上传特征数据（npy/csv）</label>
+            <input type="file" id="dataFile" accept=".npy,.csv" required>
 
-        <label>节点数 K</label>
-        <input type="number" id="k" value="3" min="1" max="10">
+            <label>节点数 K</label>
+            <input type="number" id="k" value="3" min="1" max="10">
 
-        <label>ρ (rho)</label>
-        <input type="number" id="rho" value="1.0" step="0.01">
+            <label>ρ (rho)</label>
+            <input type="number" id="rho" value="1.0" step="0.01">
 
-        <label>λ (lambda)</label>
-        <input type="number" id="lam" value="0.05" step="0.01">
+            <label>λ (lambda)</label>
+            <input type="number" id="lam" value="0.05" step="0.01">
 
-        <label>最大迭代次数</label>
-        <input type="number" id="max_iter" value="100" min="1">
+            <label>最大迭代次数</label>
+            <input type="number" id="max_iter" value="100" min="1">
 
-        <button type="submit" id="submitBtn">上传并计算</button>
-    </form>
-    <div class="progress-bar-bg" id="progressBg">
-        <div class="progress-bar" id="progressBar"></div>
+            <button type="submit" id="submitBtn">上传并计算</button>
+        </form>
+        <div class="progress-bar-bg" id="progressBg">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="loading" id="loading" style="display:none;">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <span style="margin-left:12px;color:#2d7ff9;font-size:1.1rem;">计算中...</span>
+        </div>
+        <div class="result" id="result" style="display:none;"></div>
+        <div class="error" id="error"></div>
+      </div>
+      <div style="flex:1.2;min-width:260px;max-width:420px;">
+        <div style="background:#f8fafc;border-radius:8px;padding:14px 16px 12px 16px;min-height:120px;max-height:260px;overflow:auto;font-size:0.98rem;color:#234;box-shadow:0 2px 8px rgba(45,127,249,0.06);margin-bottom:18px;">
+          <b>计算日志：</b>
+          <pre id="logBox" style="margin:8px 0 0 0;font-size:0.97rem;line-height:1.5;white-space:pre-wrap;word-break:break-all;background:none;border:none;padding:0;max-height:200px;overflow:auto;"></pre>
+        </div>
+        <div class="curve" id="curve"></div>
+      </div>
     </div>
-    <div class="loading" id="loading" style="display:none;">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <span style="margin-left:12px;color:#2d7ff9;font-size:1.1rem;">计算中...</span>
-    </div>
-    <div class="result" id="result" style="display:none;"></div>
-    <div class="error" id="error"></div>
-    <div class="curve" id="curve"></div>
 </div>
 <div class="footer">
     &copy; 2026 无人机数据安全回传与分布式隐私计算平台 | 设计：AI Copilot
