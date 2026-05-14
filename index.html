@@ -3,25 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <title>无人机数据安全回传与分布式隐私计算平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            background: #f5f7fa;
-            font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f5f7fa 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            position: relative;
+            /* 添加高清无人机背景图 */
+            background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .bg-mask {
+            position: fixed;
+            left: 0; top: 0; width: 100vw; height: 100vh;
+            background: rgba(245,247,250,0.82);
+            z-index: 0;
+            pointer-events: none;
+        }
+        .drone-bg {
+            position: fixed;
+            left: 0; top: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.18;
+            background: none;
+        }
+        .navbar {
+            background: #2d7ff9;
+            color: #fff;
+            padding: 18px 0 16px 0;
+            text-align: center;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(45,127,249,0.08);
         }
         .container {
-            max-width: 520px;
-            margin: 40px auto;
+            max-width: 540px;
+            margin: 40px auto 0 auto;
             background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-            padding: 32px 36px 28px 36px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(45,127,249,0.10);
+            padding: 36px 36px 28px 36px;
+            position: relative;
         }
         h2 {
             text-align: center;
             color: #2d7ff9;
             margin-bottom: 24px;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
         }
         label {
             display: block;
@@ -31,54 +69,135 @@
         }
         input[type="file"], input[type="number"], input[type="text"] {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #d0d7de;
-            border-radius: 6px;
+            border-radius: 8px;
             margin-bottom: 10px;
+            font-size: 1rem;
         }
         button {
             width: 100%;
-            background: #2d7ff9;
+            background: linear-gradient(90deg, #2d7ff9 60%, #6a9cf9 100%);
             color: #fff;
             border: none;
-            border-radius: 6px;
-            padding: 12px;
-            font-size: 16px;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 17px;
             cursor: pointer;
             margin-top: 18px;
-            transition: background 0.2s;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(45,127,249,0.08);
+            transition: background 0.2s, box-shadow 0.2s;
         }
         button:hover {
-            background: #1a5fcc;
+            background: linear-gradient(90deg, #1a5fcc 60%, #4e7be6 100%);
+            box-shadow: 0 4px 16px rgba(45,127,249,0.13);
+        }
+        .progress-bar-bg {
+            width: 100%;
+            background: #e0e7ff;
+            border-radius: 8px;
+            margin-top: 10px;
+            height: 12px;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-bar {
+            height: 12px;
+            background: linear-gradient(90deg, #2d7ff9 60%, #6a9cf9 100%);
+            width: 0;
+            border-radius: 8px;
+            transition: width 0.3s;
         }
         .result {
-            margin-top: 28px;
-            background: #f0f6ff;
-            border-left: 4px solid #2d7ff9;
-            padding: 16px;
-            border-radius: 6px;
+            margin-top: 32px;
+            background: linear-gradient(90deg, #e0f2fe 60%, #f0f6ff 100%);
+            border-left: 5px solid #2d7ff9;
+            padding: 20px 18px 18px 18px;
+            border-radius: 10px;
             color: #222;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 8px rgba(45,127,249,0.06);
+            animation: fadeIn 0.7s;
         }
         .error {
             color: #d32f2f;
             margin-top: 18px;
             text-align: center;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        .curve {
+            margin-top: 24px;
+            text-align: center;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 24px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            margin: 0 4px;
+            border-radius: 50%;
+            background: #2d7ff9;
+            animation: bounce 1.2s infinite;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.8); }
+            40% { transform: scale(1.2); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        @media (max-width: 600px) {
+            .container { padding: 18px 8px 18px 8px; }
+            .navbar { font-size: 1.1rem; }
         }
         .footer {
             text-align: center;
             color: #888;
-            margin-top: 40px;
-            font-size: 14px;
-        }
-        .curve {
-            margin-top: 18px;
-            text-align: center;
+            margin-top: 48px;
+            font-size: 15px;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
+<!-- 无人机SVG背景装饰 -->
+<div class="drone-bg">
+    <svg width="100%" height="100%" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g>
+            <ellipse cx="900" cy="200" rx="120" ry="30" fill="#b3cfff"/>
+            <ellipse cx="300" cy="600" rx="160" ry="40" fill="#b3cfff"/>
+            <g>
+                <circle cx="600" cy="300" r="38" fill="#2d7ff9" stroke="#fff" stroke-width="8"/>
+                <rect x="585" y="260" width="30" height="80" rx="15" fill="#2d7ff9" stroke="#fff" stroke-width="6"/>
+                <rect x="560" y="285" width="80" height="30" rx="15" fill="#2d7ff9" stroke="#fff" stroke-width="6"/>
+                <circle cx="570" cy="270" r="12" fill="#fff"/>
+                <circle cx="630" cy="270" r="12" fill="#fff"/>
+                <circle cx="570" cy="330" r="12" fill="#fff"/>
+                <circle cx="630" cy="330" r="12" fill="#fff"/>
+                <ellipse cx="600" cy="300" rx="10" ry="18" fill="#fff" opacity="0.5"/>
+            </g>
+            <g>
+                <rect x="700" y="100" width="60" height="16" rx="8" fill="#2d7ff9" opacity="0.5"/>
+                <rect x="200" y="700" width="80" height="18" rx="9" fill="#2d7ff9" opacity="0.5"/>
+            </g>
+        </g>
+    </svg>
+</div>
+<div class="navbar">
+    无人机数据安全回传与分布式隐私计算平台
+</div>
 <div class="container">
-    <h2>无人机数据安全回传与分布式隐私计算平台</h2>
+    <h2>特征数据上传与分布式隐私计算</h2>
     <form id="uploadForm">
         <label>上传特征数据（npy/csv）</label>
         <input type="file" id="dataFile" accept=".npy,.csv" required>
@@ -95,27 +214,44 @@
         <label>最大迭代次数</label>
         <input type="number" id="max_iter" value="100" min="1">
 
-        <button type="submit">上传并计算</button>
+        <button type="submit" id="submitBtn">上传并计算</button>
     </form>
+    <div class="progress-bar-bg" id="progressBg">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="loading" id="loading" style="display:none;">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <span style="margin-left:12px;color:#2d7ff9;font-size:1.1rem;">计算中...</span>
+    </div>
     <div class="result" id="result" style="display:none;"></div>
     <div class="error" id="error"></div>
     <div class="curve" id="curve"></div>
 </div>
 <div class="footer">
-    &copy; 2026 无人机数据安全回传与分布式隐私计算平台
+    &copy; 2026 无人机数据安全回传与分布式隐私计算平台 | 设计：AI Copilot
 </div>
 <script>
-    const apiUrl = "http://localhost:8000/api/upload_and_process/"; // 修改为你的后端地址
+    // 修改为你的后端地址
+    const apiUrl = "http://localhost:8000/api/upload_and_process/";
+
+    let chart = null;
 
     document.getElementById('uploadForm').onsubmit = async function(e) {
         e.preventDefault();
         document.getElementById('result').style.display = 'none';
         document.getElementById('error').innerText = '';
         document.getElementById('curve').innerHTML = '';
+        document.getElementById('progressBg').style.display = 'block';
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('loading').style.display = 'flex';
+        document.getElementById('submitBtn').disabled = true;
 
         const fileInput = document.getElementById('dataFile');
         if (!fileInput.files.length) {
             document.getElementById('error').innerText = '请上传数据文件';
+            resetUI();
             return;
         }
         const formData = new FormData();
@@ -125,62 +261,94 @@
         formData.append('lam', document.getElementById('lam').value);
         formData.append('max_iter', document.getElementById('max_iter').value);
 
+        // 模拟进度条
+        let progress = 0;
+        const progressBar = document.getElementById('progressBar');
+        const interval = setInterval(() => {
+            if (progress < 80) {
+                progress += Math.random() * 5;
+                progressBar.style.width = progress + '%';
+            }
+        }, 200);
+
         try {
             const res = await fetch(apiUrl, {
                 method: 'POST',
                 body: formData
             });
+            clearInterval(interval);
+            progressBar.style.width = '100%';
+            setTimeout(() => {
+                document.getElementById('progressBg').style.display = 'none';
+                progressBar.style.width = '0%';
+            }, 600);
+
             const data = await res.json();
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('submitBtn').disabled = false;
+
             if (res.ok) {
                 document.getElementById('result').style.display = 'block';
                 document.getElementById('result').innerHTML =
-                    `<b>最终MSE：</b> ${data.final_mse}<br><b>MSE收敛曲线：</b>`;
-                // 简单绘制MSE曲线
+                    `<b>最终MSE：</b> <span style='color:#2d7ff9;font-size:1.2em;'>${data.final_mse}</span><br><b>MSE收敛曲线：</b>`;
                 drawCurve(data.mse_curve);
             } else {
                 document.getElementById('error').innerText = data.error || '计算失败';
             }
         } catch (err) {
+            clearInterval(interval);
+            document.getElementById('progressBg').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('submitBtn').disabled = false;
             document.getElementById('error').innerText = '网络错误或服务器无响应';
         }
     };
 
+    function resetUI() {
+        document.getElementById('progressBg').style.display = 'none';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
+    }
+
     function drawCurve(curve) {
         if (!curve || !curve.length) return;
-        const canvas = document.createElement('canvas');
-        canvas.width = 420;
-        canvas.height = 180;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // 坐标轴
-        ctx.strokeStyle = '#bbb';
-        ctx.beginPath();
-        ctx.moveTo(40, 10);
-        ctx.lineTo(40, 160);
-        ctx.lineTo(400, 160);
-        ctx.stroke();
-        // 曲线
-        const maxY = Math.max(...curve);
-        const minY = Math.min(...curve);
-        ctx.strokeStyle = '#2d7ff9';
-        ctx.beginPath();
-        for (let i = 0; i < curve.length; i++) {
-            const x = 40 + (360 * i / (curve.length - 1));
-            const y = 160 - ((curve[i] - minY) / (maxY - minY + 1e-8)) * 140;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-        // 标注
-        ctx.fillStyle = '#222';
-        ctx.font = '12px Arial';
-        ctx.fillText('迭代', 200, 175);
-        ctx.save();
-        ctx.translate(10, 100);
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillText('MSE', 0, 0);
-        ctx.restore();
-        document.getElementById('curve').appendChild(canvas);
+        const curveDiv = document.getElementById('curve');
+        curveDiv.innerHTML = '<canvas id=\"mseChart\" width=\"420\" height=\"220\"></canvas>';
+        const ctx = document.getElementById('mseChart').getContext('2d');
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: curve.map((_, i) => i + 1),
+                datasets: [{
+                    label: 'MSE',
+                    data: curve,
+                    borderColor: '#2d7ff9',
+                    backgroundColor: 'rgba(45,127,249,0.08)',
+                    borderWidth: 3,
+                    pointRadius: 2,
+                    pointBackgroundColor: '#2d7ff9',
+                    tension: 0.22,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: '迭代次数', color: '#222', font: { size: 14 } },
+                        grid: { color: '#e0e7ff' }
+                    },
+                    y: {
+                        title: { display: true, text: 'MSE', color: '#222', font: { size: 14 } },
+                        grid: { color: '#e0e7ff' }
+                    }
+                }
+            }
+        });
     }
 </script>
 </body>
