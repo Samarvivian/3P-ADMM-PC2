@@ -196,7 +196,28 @@
 <div class="navbar">
     无人机数据安全回传与分布式隐私计算平台
 </div>
-<div class="container">
+<div class="container" id="authContainer">
+    <h2 id="authTitle">用户登录</h2>
+    <form id="loginForm">
+        <label>用户名</label>
+        <input type="text" id="username" required autocomplete="username">
+        <label>密码</label>
+        <input type="password" id="password" required autocomplete="current-password">
+        <button type="submit" id="loginBtn">登录</button>
+    </form>
+    <form id="registerForm" style="display:none;">
+        <label>用户名</label>
+        <input type="text" id="regUsername" required autocomplete="username">
+        <label>密码</label>
+        <input type="password" id="regPassword" required autocomplete="new-password">
+        <button type="submit" id="registerBtn">注册</button>
+    </form>
+    <div class="error" id="authError"></div>
+    <div style="text-align:center;margin-top:18px;">
+        <a href="#" id="toggleAuth" style="color:#2d7ff9;text-decoration:underline;cursor:pointer;">没有账号？注册</a>
+    </div>
+</div>
+<div class="container" id="mainContainer" style="display:none;">
     <h2>特征数据上传与分布式隐私计算</h2>
     <form id="uploadForm">
         <label>上传特征数据（npy/csv）</label>
