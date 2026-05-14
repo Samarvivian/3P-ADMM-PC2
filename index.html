@@ -46,13 +46,17 @@
             box-shadow: 0 2px 8px rgba(45,127,249,0.08);
         }
         .container {
-            max-width: 540px;
+            width: 96vw;
+            max-width: 1400px;
             margin: 40px auto 0 auto;
             background: #fff;
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(45,127,249,0.10);
             padding: 36px 36px 28px 36px;
             position: relative;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
         }
         h2 {
             text-align: center;
@@ -222,8 +226,8 @@
     <div style="background:linear-gradient(90deg,#e0f2fe 60%,#f0f6ff 100%);border-left:4px solid #2d7ff9;padding:16px 18px 14px 18px;border-radius:8px;color:#234;margin-bottom:22px;font-size:1.08rem;">
         本系统面向无人机等物联网场景，集成了分布式隐私保护ADMM优化算法，支持同态加密与高效数据处理。用户可上传特征数据，系统将自动完成分布式隐私计算并展示收敛曲线，保障数据安全与智能协作。
     </div>
-    <div style="display:flex;gap:24px;align-items:flex-start;">
-      <div style="flex:1;min-width:220px;">
+    <div style="display:flex;gap:36px;align-items:flex-start;width:100%;margin-top:8px;">
+      <div style="flex:1.1;min-width:260px;max-width:420px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(45,127,249,0.06);padding:24px 22px 18px 22px;">
         <form id="uploadForm">
             <label>上传特征数据（npy/csv）</label>
             <input type="file" id="dataFile" accept=".npy,.csv" required>
@@ -254,12 +258,12 @@
         <div class="result" id="result" style="display:none;"></div>
         <div class="error" id="error"></div>
       </div>
-      <div style="flex:1.2;min-width:260px;max-width:420px;">
-        <div style="background:#f8fafc;border-radius:8px;padding:14px 16px 12px 16px;min-height:120px;max-height:260px;overflow:auto;font-size:0.98rem;color:#234;box-shadow:0 2px 8px rgba(45,127,249,0.06);margin-bottom:18px;">
+      <div style="flex:2.2;min-width:340px;background:#f8fafc;border-radius:12px;box-shadow:0 2px 8px rgba(45,127,249,0.06);padding:24px 22px 18px 22px;display:flex;flex-direction:column;align-items:stretch;">
+        <div style="background:#f0f6ff;border-radius:8px;padding:14px 16px 12px 16px;min-height:120px;max-height:260px;overflow:auto;font-size:0.98rem;color:#234;box-shadow:0 2px 8px rgba(45,127,249,0.06);margin-bottom:18px;">
           <b>计算日志：</b>
           <pre id="logBox" style="margin:8px 0 0 0;font-size:0.97rem;line-height:1.5;white-space:pre-wrap;word-break:break-all;background:none;border:none;padding:0;max-height:200px;overflow:auto;"></pre>
         </div>
-        <div class="curve" id="curve"></div>
+        <div class="curve" id="curve" style="flex:1;"></div>
       </div>
     </div>
 </div>
@@ -353,6 +357,7 @@
         document.getElementById('progressBar').style.width = '0%';
         document.getElementById('loading').style.display = 'flex';
         document.getElementById('submitBtn').disabled = true;
+        document.getElementById('logBox').innerText = '';
 
         const fileInput = document.getElementById('dataFile');
         if (!fileInput.files.length) {
@@ -377,12 +382,32 @@
             }
         }, 200);
 
+        // 日志模拟（实际可用WebSocket或API实时推送）
+        let logLines = ["[系统] 开始上传与计算..."];
+        let logTimer = setInterval(() => {
+            if (logLines.length < 6) {
+                logLines.push(`[${new Date().toLocaleTimeString()}] 正在分布式计算...`);
+                document.getElementById('logBox').innerText = logLines.join('\n');
+            }
+        }, 1200);
+
+        // 实时MSE曲线模拟（实际应由后端API推送）
+        let mseCurve = [];
+        let mseTimer = setInterval(() => {
+            if (mseCurve.length < 10) {
+                mseCurve.push(0.2 + Math.random() * 0.1 - mseCurve.length * 0.01);
+                drawCurve(mseCurve);
+            }
+        }, 1000);
+
         try {
             const res = await fetch(apiUrl, {
                 method: 'POST',
                 body: formData
             });
             clearInterval(interval);
+            clearInterval(logTimer);
+            clearInterval(mseTimer);
             progressBar.style.width = '100%';
             setTimeout(() => {
                 document.getElementById('progressBg').style.display = 'none';
@@ -397,18 +422,24 @@
                 document.getElementById('result').style.display = 'block';
                 document.getElementById('result').innerHTML =
                     `<b>最终MSE：</b> <span style='color:#2d7ff9;font-size:1.2em;'>${data.final_mse}</span><br><b>MSE收敛曲线：</b>`;
+                document.getElementById('logBox').innerText += '\n[系统] 计算完成！';
                 drawCurve(data.mse_curve);
             } else {
                 document.getElementById('error').innerText = data.error || '计算失败';
+                document.getElementById('logBox').innerText += '\n[系统] 计算失败！';
             }
         } catch (err) {
             clearInterval(interval);
+            clearInterval(logTimer);
+            clearInterval(mseTimer);
             document.getElementById('progressBg').style.display = 'none';
             document.getElementById('loading').style.display = 'none';
             document.getElementById('submitBtn').disabled = false;
             document.getElementById('error').innerText = '网络错误或服务器无响应';
+            document.getElementById('logBox').innerText += '\n[系统] 网络错误或服务器无响应';
         }
     };
+
 
     function resetUI() {
         document.getElementById('progressBg').style.display = 'none';
