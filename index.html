@@ -398,14 +398,8 @@
             }
         }, 1200);
 
-        // 实时MSE曲线模拟（实际应由后端API推送）
-        let mseCurve = [];
-        let mseTimer = setInterval(() => {
-            if (mseCurve.length < 10) {
-                mseCurve.push(0.2 + Math.random() * 0.1 - mseCurve.length * 0.01);
-                drawCurve(mseCurve);
-            }
-        }, 1000);
+        // 不再模拟MSE曲线，等待后端真实数据
+
 
         try {
             const res = await fetch(apiUrl, {
@@ -414,7 +408,6 @@
             });
             clearInterval(interval);
             clearInterval(logTimer);
-            clearInterval(mseTimer);
             progressBar.style.width = '100%';
             setTimeout(() => {
                 document.getElementById('progressBg').style.display = 'none';
