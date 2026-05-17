@@ -6,276 +6,500 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #2563eb;
+            --primary-light: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --accent-cyan: #0891b2;
+            --text-dark: #1e293b;
+            --text-dim: #475569;
+            --text-light: #64748b;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #e0e7ff 0%, #f5f7fa 100%);
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Segoe UI', 'Poppins', 'Roboto', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
-            position: relative;
-            /* 添加高清无人机背景图 */
-            background-image: url('https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=1200&q=80');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background: linear-gradient(135deg, #e8f0ff 0%, #f5f7fa 50%, #e2e8f0 100%);
+            color: var(--text-dark);
+            font-size: 24px;
         }
-        .bg-mask {
-            position: fixed;
-            left: 0; top: 0; width: 100vw; height: 100vh;
-            background: rgba(245,247,250,0.82);
-            z-index: 0;
-            pointer-events: none;
-        }
-        .drone-bg {
-            position: fixed;
-            left: 0; top: 0; width: 100vw; height: 100vh;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.18;
-            background: none;
-        }
+
+        /* 导航栏 - 无边框半透明 */
         .navbar {
-            background: #2d7ff9;
-            color: #fff;
-            padding: 18px 0 16px 0;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            padding: 24px 0;
             text-align: center;
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(45,127,249,0.08);
+            font-size: 2rem;
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            color: var(--primary-blue);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
         }
-        .container {
-            width: 96vw;
-            max-width: 1400px;
-            margin: 40px auto 0 auto;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(45,127,249,0.10);
-            padding: 36px 36px 28px 36px;
-            position: relative;
-            min-height: 480px;
-            display: flex;
-            flex-direction: column;
+
+        .navbar i {
+            margin-right: 12px;
         }
+
+        /* 主内容区 - 无卡片边框，直接铺满 */
+        .main-content {
+            max-width: 2000px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
         h2 {
             text-align: center;
-            color: #2d7ff9;
-            margin-bottom: 24px;
-            font-size: 1.4rem;
-            letter-spacing: 1px;
+            color: var(--primary-dark);
+            margin-bottom: 30px;
+            font-size: 2.2rem;
+            font-weight: 700;
         }
+
+        h2 i {
+            color: var(--primary-blue);
+            margin-right: 12px;
+        }
+
+        /* 说明文字 - 无边框 */
+        .info-text {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-dim);
+            margin-bottom: 40px;
+            padding: 20px 40px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            line-height: 1.6;
+        }
+
+        .info-text i {
+            color: var(--primary-blue);
+            margin-right: 8px;
+        }
+
+        /* 两栏布局 - 无背景框 */
+        .content-grid {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .control-panel {
+            flex: 1.2;
+            min-width: 320px;
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .visualization-panel {
+            flex: 2;
+            min-width: 420px;
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            padding: 32px;
+        }
+
+        /* 表单元素 */
         label {
             display: block;
-            margin: 18px 0 6px 0;
-            color: #333;
-            font-weight: 500;
-        }
-        input[type="file"], input[type="number"], input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d0d7de;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            margin: 24px 0 10px 0;
+            color: var(--text-dark);
+            font-weight: 600;
             font-size: 1rem;
         }
+
+        label i {
+            margin-right: 8px;
+            color: var(--primary-blue);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px 18px;
+            background: #ffffff;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 16px;
+            color: var(--text-dark);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        input[type="file"] {
+            padding: 12px;
+            background: #f8fafc;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-light));
+            border: none;
+            padding: 8px 22px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+        }
+
+        /* 按钮 */
         button {
             width: 100%;
-            background: linear-gradient(90deg, #2d7ff9 60%, #6a9cf9 100%);
-            color: #fff;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-light));
+            color: white;
             border: none;
-            border-radius: 8px;
-            padding: 14px;
-            font-size: 17px;
-            cursor: pointer;
-            margin-top: 18px;
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 1.05rem;
             font-weight: 600;
-            letter-spacing: 1px;
-            box-shadow: 0 2px 8px rgba(45,127,249,0.08);
-            transition: background 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            margin-top: 32px;
+            transition: all 0.3s ease;
         }
+
         button:hover {
-            background: linear-gradient(90deg, #1a5fcc 60%, #4e7be6 100%);
-            box-shadow: 0 4px 16px rgba(45,127,249,0.13);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
         }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* 进度条 */
         .progress-bar-bg {
             width: 100%;
-            background: #e0e7ff;
-            border-radius: 8px;
-            margin-top: 10px;
-            height: 12px;
+            background: #e2e8f0;
+            border-radius: 20px;
+            margin-top: 24px;
+            height: 6px;
             overflow: hidden;
             display: none;
         }
+
         .progress-bar {
-            height: 12px;
-            background: linear-gradient(90deg, #2d7ff9 60%, #6a9cf9 100%);
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-cyan));
             width: 0;
-            border-radius: 8px;
-            transition: width 0.3s;
+            border-radius: 20px;
+            transition: width 0.4s ease;
         }
+
+        /* 结果区域 */
         .result {
-            margin-top: 32px;
-            background: linear-gradient(90deg, #e0f2fe 60%, #f0f6ff 100%);
-            border-left: 5px solid #2d7ff9;
-            padding: 20px 18px 18px 18px;
-            border-radius: 10px;
-            color: #222;
-            font-size: 1.1rem;
-            box-shadow: 0 2px 8px rgba(45,127,249,0.06);
-            animation: fadeIn 0.7s;
+            margin-top: 28px;
+            background: rgba(248, 250, 252, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            animation: fadeIn 0.5s ease;
         }
+
+        .result b {
+            color: var(--primary-blue);
+        }
+
         .error {
-            color: #d32f2f;
-            margin-top: 18px;
+            color: #dc2626;
+            margin-top: 20px;
             text-align: center;
-            font-weight: 500;
-            font-size: 1.1rem;
+            background: rgba(220, 38, 38, 0.08);
+            padding: 12px;
+            border-radius: 14px;
         }
+
+        /* 图表区域 */
         .curve {
-            margin-top: 24px;
-            text-align: center;
+            margin-top: 28px;
+            background: rgba(248, 250, 252, 0.9);
+            border-radius: 20px;
+            padding: 20px;
         }
+
+        /* 加载动画 */
         .loading {
             display: flex;
             align-items: center;
             justify-content: center;
             margin-top: 24px;
+            gap: 12px;
         }
+
         .dot {
             width: 12px;
             height: 12px;
-            margin: 0 4px;
             border-radius: 50%;
-            background: #2d7ff9;
-            animation: bounce 1.2s infinite;
+            background: var(--primary-blue);
+            animation: bounce 1.4s infinite ease-in-out;
         }
-        .dot:nth-child(2) { animation-delay: 0.2s; }
-        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; background: var(--accent-cyan); }
+        .dot:nth-child(3) { animation-delay: 0.4s; background: #8b5cf6; }
+
         @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0.8); }
-            40% { transform: scale(1.2); }
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px);}
-            to { opacity: 1; transform: translateY(0);}
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        @media (max-width: 600px) {
-            .container { padding: 18px 8px 18px 8px; }
-            .navbar { font-size: 1.1rem; }
+
+        /* 日志区域 */
+        .log-box-container {
+            background: rgba(248, 250, 252, 0.9);
+            border-radius: 20px;
+            padding: 18px;
+            max-height: 240px;
+            overflow: auto;
         }
+
+        #logBox {
+            margin: 0;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* 标签 chips */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 30px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-dark);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        /* 登录容器 - 居中窄框 */
+        .login-container {
+            max-width: 480px;
+            margin: 80px auto;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 48px;
+        }
+
+        .auth-link {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .auth-link:hover {
+            color: var(--accent-cyan);
+            text-decoration: underline;
+        }
+
+        /* 页脚 */
         .footer {
             text-align: center;
-            color: #888;
-            margin-top: 48px;
-            font-size: 15px;
-            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-top: 60px;
+            padding: 24px;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .main-content { padding: 20px; }
+            .control-panel, .visualization-panel { padding: 20px; }
+            .navbar { font-size: 1.3rem; padding: 16px 0; }
+            h2 { font-size: 1.6rem; }
+            .info-text { font-size: 0.9rem; padding: 15px; }
         }
     </style>
 </head>
 <body>
-<!-- 无人机SVG背景装饰 -->
-<div class="drone-bg">
-    <svg width="100%" height="100%" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g>
-            <ellipse cx="900" cy="200" rx="120" ry="30" fill="#b3cfff"/>
-            <ellipse cx="300" cy="600" rx="160" ry="40" fill="#b3cfff"/>
-            <g>
-                <circle cx="600" cy="300" r="38" fill="#2d7ff9" stroke="#fff" stroke-width="8"/>
-                <rect x="585" y="260" width="30" height="80" rx="15" fill="#2d7ff9" stroke="#fff" stroke-width="6"/>
-                <rect x="560" y="285" width="80" height="30" rx="15" fill="#2d7ff9" stroke="#fff" stroke-width="6"/>
-                <circle cx="570" cy="270" r="12" fill="#fff"/>
-                <circle cx="630" cy="270" r="12" fill="#fff"/>
-                <circle cx="570" cy="330" r="12" fill="#fff"/>
-                <circle cx="630" cy="330" r="12" fill="#fff"/>
-                <ellipse cx="600" cy="300" rx="10" ry="18" fill="#fff" opacity="0.5"/>
-            </g>
-            <g>
-                <rect x="700" y="100" width="60" height="16" rx="8" fill="#2d7ff9" opacity="0.5"/>
-                <rect x="200" y="700" width="80" height="18" rx="9" fill="#2d7ff9" opacity="0.5"/>
-            </g>
-        </g>
+
+<div class="navbar">
+    <!-- 左边无人机图标 -->
+    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 15px;">
+        <!-- 无人机主体 -->
+        <circle cx="12" cy="12" r="4" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/>
+        <!-- 机臂 -->
+        <line x1="12" y1="8" x2="12" y2="4" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="12" y1="16" x2="12" y2="20" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="8" y1="12" x2="4" y2="12" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="16" y1="12" x2="20" y2="12" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- 螺旋桨 -->
+        <line x1="12" y1="2" x2="9" y2="5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="2" x2="15" y2="5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="22" x2="9" y2="19" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="22" x2="15" y2="19" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="5" y2="9" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="5" y2="15" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="12" x2="19" y2="9" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="12" x2="19" y2="15" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <!-- 相机 -->
+        <circle cx="12" cy="14" r="1.5" fill="#ffffff"/>
+        <!-- 起落架 -->
+        <line x1="9" y1="16" x2="8" y2="19" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="15" y1="16" x2="16" y2="19" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+
+    无人机数据安全回传与分布式隐私计算平台
+
+    <!-- 右边无人机图标（镜像效果） -->
+    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-left: 15px;">
+        <circle cx="12" cy="12" r="4" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/>
+        <line x1="12" y1="8" x2="12" y2="4" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="12" y1="16" x2="12" y2="20" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="8" y1="12" x2="4" y2="12" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="16" y1="12" x2="20" y2="12" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="12" y1="2" x2="9" y2="5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="2" x2="15" y2="5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="22" x2="9" y2="19" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="22" x2="15" y2="19" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="5" y2="9" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="5" y2="15" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="12" x2="19" y2="9" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="12" x2="19" y2="15" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="14" r="1.5" fill="#ffffff"/>
+        <line x1="9" y1="16" x2="8" y2="19" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="15" y1="16" x2="16" y2="19" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
     </svg>
 </div>
-<div class="navbar">
-    无人机数据安全回传与分布式隐私计算平台
-</div>
-<div class="container" id="authContainer">
-    <h2 id="authTitle">用户登录</h2>
+
+<!-- 登录容器 -->
+<div class="login-container" id="authContainer">
+    <h2 id="authTitle" style="margin-bottom: 30px;"><i class="fas fa-lock"></i> 用户登录</h2>
     <form id="loginForm">
-        <label>用户名</label>
-        <input type="text" id="username" required autocomplete="username">
-        <label>密码</label>
-        <input type="password" id="password" required autocomplete="current-password">
-        <button type="submit" id="loginBtn">登录</button>
+        <label><i class="fas fa-user"></i> 用户名</label>
+        <input type="text" id="username" required autocomplete="username" placeholder="请输入用户名">
+        <label><i class="fas fa-key"></i> 密码</label>
+        <input type="password" id="password" required autocomplete="current-password" placeholder="请输入密码">
+        <button type="submit" id="loginBtn"><i class="fas fa-sign-in-alt"></i> 登录</button>
     </form>
     <form id="registerForm" style="display:none;">
-        <label>用户名</label>
-        <input type="text" id="regUsername" required autocomplete="username">
-        <label>密码</label>
-        <input type="password" id="regPassword" required autocomplete="new-password">
-        <button type="submit" id="registerBtn">注册</button>
+        <label><i class="fas fa-user-plus"></i> 用户名</label>
+        <input type="text" id="regUsername" required autocomplete="username" placeholder="请输入用户名">
+        <label><i class="fas fa-key"></i> 密码</label>
+        <input type="password" id="regPassword" required autocomplete="new-password" placeholder="请输入密码">
+        <button type="submit" id="registerBtn"><i class="fas fa-user-plus"></i> 注册</button>
     </form>
     <div class="error" id="authError"></div>
-    <div style="text-align:center;margin-top:18px;">
-        <a href="#" id="toggleAuth" style="color:#2d7ff9;text-decoration:underline;cursor:pointer;">没有账号？注册</a>
+    <div style="text-align: center; margin-top: 24px;">
+        <a href="#" id="toggleAuth" class="auth-link"><i class="fas fa-exchange-alt"></i> 没有账号？注册</a>
     </div>
 </div>
-<div class="container" id="mainContainer" style="display:none;">
-    <h2>特征数据上传与分布式隐私计算</h2>
-    <div style="background:linear-gradient(90deg,#e0f2fe 60%,#f0f6ff 100%);border-left:4px solid #2d7ff9;padding:16px 18px 14px 18px;border-radius:8px;color:#234;margin-bottom:22px;font-size:1.08rem;">
-        本系统面向无人机等物联网场景，集成了分布式隐私保护ADMM优化算法，支持同态加密与高效数据处理。用户可上传特征数据，系统将自动完成分布式隐私计算并展示收敛曲线，保障数据安全与智能协作。
+
+<!-- 主内容区 - 铺满无卡片边框 -->
+<div class="main-content" id="mainContainer" style="display:none;">
+    <!--<h2><i class="fas fa-shield-alt"></i> 特征数据上传与分布式隐私计算</h2>-->
+
+    <div class="info-text">
+        <i class="fas fa-microchip"></i> 本系统面向无人机等物联网场景，集成了分布式隐私保护ADMM优化算法，聚焦于lasso算法，支持同态加密与高效数据处理。用户可上传特征数据，系统将自动完成分布式隐私计算并展示收敛曲线，保障数据安全与智能协作。Distributed edge network · Paillier homomorphic encryption · GPU-accelerated
     </div>
-    <div style="display:flex;gap:36px;align-items:flex-start;width:100%;margin-top:8px;">
-      <div style="flex:1.1;min-width:260px;max-width:420px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(45,127,249,0.06);padding:24px 22px 18px 22px;">
-        <form id="uploadForm">
-            <label>上传特征数据（npy/csv）</label>
-            <input type="file" id="dataFile" accept=".npy,.csv" required>
 
-            <label>节点数 K</label>
-            <input type="number" id="k" value="3" min="1" max="10">
+    <div class="content-grid">
+        <div class="control-panel">
+            <form id="uploadForm">
+                <label><i class="fas fa-cloud-upload-alt"></i> 上传特征数据（支持npy/csv文件）</label>
+                <input type="file" id="dataFile" accept=".npy,.csv" required>
 
-            <label>ρ (rho)</label>
-            <input type="number" id="rho" value="1.0" step="0.01">
+                <label><i class="fas fa-code-branch"></i> 边缘节点个数 K</label>
+                <input type="number" id="k" value="3" min="1" max="10">
 
-            <label>λ (lambda)</label>
-            <input type="number" id="lam" value="0.05" step="0.01">
+                <label><i class="fas fa-chart-line"></i> ρ (rho)</label>
+                <input type="number" id="rho" value="1.0" step="0.01">
 
-            <label>最大迭代次数</label>
-            <input type="number" id="max_iter" value="100" min="1">
+                <label><i class="fas fa-chart-bar"></i> λ (lambda)</label>
+                <input type="number" id="lam" value="0.05" step="0.01">
 
-            <label>主节点计算方式</label>
-            <select id="compute_mode" style="width:100%;padding:10px;border:1px solid #d0d7de;border-radius:8px;margin-bottom:10px;font-size:1rem;">
-                <option value="cpu">仅CPU</option>
-                <option value="gpu">CPU+GPU加速</option>
-            </select>
+                <label><i class="fas fa-sync-alt"></i> 最大迭代次数</label>
+                <input type="number" id="max_iter" value="100" min="1">
 
-            <button type="submit" id="submitBtn">上传并计算</button>
-        </form>
-        <div class="progress-bar-bg" id="progressBg">
-            <div class="progress-bar" id="progressBar"></div>
+                <label><i class="fas fa-tachometer-alt"></i> 主节点计算方式</label>
+                <select id="compute_mode">
+                    <option value="cpu">仅CPU</option>
+                    <option value="gpu">CPU+GPU加速</option>
+                </select>
+
+                <label><i class="fas fa-key"></i> 密钥长度（位）</label>
+                <select id="key_length">
+                <option value="1024">1024（标准安全）</option>
+                <option value="2048" selected>2048（高安全 - 推荐）</option>
+                <option value="4096">4096（最高安全）</option>
+                </select>
+
+                <label><i class="fas fa-network-wired"></i> 可用边缘节点</label>
+                <div id="nodesContainer" style="margin-bottom: 10px;"></div>
+
+                <button type="submit" id="submitBtn"><i class="fas fa-play"></i> 上传并计算</button>
+            </form>
+
+            <div class="progress-bar-bg" id="progressBg">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="loading" id="loading" style="display:none;">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <span style="margin-left: 12px; color: var(--primary-blue);">计算中...</span>
+            </div>
+
+            <div class="result" id="result" style="display:none;"></div>
+            <div class="error" id="error"></div>
         </div>
-        <div class="loading" id="loading" style="display:none;">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <span style="margin-left:12px;color:#2d7ff9;font-size:1.1rem;">计算中...</span>
+
+        <div class="visualization-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <span class="chip" id="nodeCountChip"><i class="fas fa-microchip"></i> Nodes: --</span>
+                    <span class="chip" id="finalMseChip"><i class="fas fa-chart-line"></i> Final MSE: --</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-light);">
+                    <i class="fas fa-circle" style="color: #22c55e; font-size: 0.65rem;"></i> 实时状态：<span id="statusLabel">空闲</span>
+                </div>
+            </div>
+            <div class="log-box-container">
+                <b><i class="fas fa-terminal"></i> 计算日志：</b>
+                <pre id="logBox"></pre>
+            </div>
+            <div class="curve" id="curve"></div>
         </div>
-        <div class="result" id="result" style="display:none;"></div>
-        <div class="error" id="error"></div>
-      </div>
-      <div style="flex:2.2;min-width:340px;background:#f8fafc;border-radius:12px;box-shadow:0 2px 8px rgba(45,127,249,0.06);padding:24px 22px 18px 22px;display:flex;flex-direction:column;align-items:stretch;">
-        <div style="background:#f0f6ff;border-radius:8px;padding:14px 16px 12px 16px;min-height:120px;max-height:260px;overflow:auto;font-size:0.98rem;color:#234;box-shadow:0 2px 8px rgba(45,127,249,0.06);margin-bottom:18px;">
-          <b>计算日志：</b>
-          <pre id="logBox" style="margin:8px 0 0 0;font-size:0.97rem;line-height:1.5;white-space:pre-wrap;word-break:break-all;background:none;border:none;padding:0;max-height:200px;overflow:auto;"></pre>
-        </div>
-        <div class="curve" id="curve" style="flex:1;"></div>
-      </div>
     </div>
 </div>
+
 <div class="footer">
-    &copy; 2026 无人机数据安全回传与分布式隐私计算平台 | 设计：AI Copilot
+    <i class="fas fa-copyright"></i> 2026 无人机数据安全回传与分布式隐私计算平台
 </div>
+
 <script>
     // 登录注册逻辑
     const authContainer = document.getElementById('authContainer');
@@ -286,24 +510,23 @@
     const toggleAuth = document.getElementById('toggleAuth');
     const authTitle = document.getElementById('authTitle');
 
-    // 切换登录/注册
-    toggleAuth.onclick = function() {
+    toggleAuth.onclick = function(e) {
+        e.preventDefault();
         if (loginForm.style.display !== 'none') {
             loginForm.style.display = 'none';
-            registerForm.style.display = '';
-            authTitle.innerText = '用户注册';
-            toggleAuth.innerText = '已有账号？登录';
+            registerForm.style.display = 'block';
+            authTitle.innerHTML = '<i class="fas fa-user-plus"></i> 用户注册';
+            toggleAuth.innerHTML = '<i class="fas fa-sign-in-alt"></i> 已有账号？登录';
             authError.innerText = '';
         } else {
-            loginForm.style.display = '';
+            loginForm.style.display = 'block';
             registerForm.style.display = 'none';
-            authTitle.innerText = '用户登录';
-            toggleAuth.innerText = '没有账号？注册';
+            authTitle.innerHTML = '<i class="fas fa-lock"></i> 用户登录';
+            toggleAuth.innerHTML = '<i class="fas fa-user-plus"></i> 没有账号？注册';
             authError.innerText = '';
         }
     };
 
-    // 注册
     registerForm.onsubmit = function(e) {
         e.preventDefault();
         const user = document.getElementById('regUsername').value.trim();
@@ -317,11 +540,15 @@
             return;
         }
         localStorage.setItem('user_' + user, pwd);
-        authError.innerText = '注册成功，请登录';
-        setTimeout(() => toggleAuth.onclick(), 1000);
+        authError.style.color = '#16a34a';
+        authError.innerText = '✓ 注册成功，请登录';
+        setTimeout(() => {
+            toggleAuth.click();
+            authError.innerText = '';
+            authError.style.color = '#dc2626';
+        }, 1000);
     };
 
-    // 登录
     loginForm.onsubmit = function(e) {
         e.preventDefault();
         const user = document.getElementById('username').value.trim();
@@ -335,23 +562,22 @@
             authError.innerText = '用户名或密码错误';
             return;
         }
-        // 登录成功
         authContainer.style.display = 'none';
-        mainContainer.style.display = '';
+        mainContainer.style.display = 'block';
         localStorage.setItem('login_user', user);
+        document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 已登录';
     };
 
-    // 自动登录
     window.onload = function() {
         if (localStorage.getItem('login_user')) {
             authContainer.style.display = 'none';
-            mainContainer.style.display = '';
+            mainContainer.style.display = 'block';
+            document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 已登录';
         }
+        loadNodes();
     };
 
-    // 修改为你的后端地址
     const apiUrl = "http://localhost:8000/api/upload_and_process/";
-
     let chart = null;
 
     document.getElementById('uploadForm').onsubmit = async function(e) {
@@ -364,6 +590,7 @@
         document.getElementById('loading').style.display = 'flex';
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('logBox').innerText = '';
+        document.getElementById('statusLabel').innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 计算中';
 
         const fileInput = document.getElementById('dataFile');
         if (!fileInput.files.length) {
@@ -379,35 +606,22 @@
         formData.append('max_iter', document.getElementById('max_iter').value);
         formData.append('compute_mode', document.getElementById('compute_mode').value);
 
-        // 模拟进度条
         let progress = 0;
         const progressBar = document.getElementById('progressBar');
         const interval = setInterval(() => {
             if (progress < 80) {
                 progress += Math.random() * 5;
-                progressBar.style.width = progress + '%';
+                progressBar.style.width = Math.min(progress, 80) + '%';
             }
         }, 200);
 
-        // 日志模拟（实际可用WebSocket或API实时推送）
         let logLines = ["[系统] 开始上传与计算..."];
-        let logTimer = setInterval(() => {
-            if (logLines.length < 6) {
-                logLines.push(`[${new Date().toLocaleTimeString()}] 正在分布式计算...`);
-                document.getElementById('logBox').innerText = logLines.join('\n');
-            }
-        }, 1200);
-
-        // 不再模拟MSE曲线，等待后端真实数据
-
+        // show initial client-side info once; server logs are authoritative
+        document.getElementById('logBox').innerText = logLines.join('\n');
 
         try {
-            const res = await fetch(apiUrl, {
-                method: 'POST',
-                body: formData
-            });
+            const res = await fetch(apiUrl, { method: 'POST', body: formData });
             clearInterval(interval);
-            clearInterval(logTimer);
             progressBar.style.width = '100%';
             setTimeout(() => {
                 document.getElementById('progressBg').style.display = 'none';
@@ -417,40 +631,45 @@
             const data = await res.json();
             document.getElementById('loading').style.display = 'none';
             document.getElementById('submitBtn').disabled = false;
+            document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 计算完成';
 
             if (res.ok) {
                 document.getElementById('result').style.display = 'block';
-                document.getElementById('result').innerHTML =
-                    `<b>最终MSE：</b> <span style='color:#2d7ff9;font-size:1.2em;'>${data.final_mse}</span><br><b>MSE收敛曲线：</b>`;
-                document.getElementById('logBox').innerText += '\n[系统] 计算完成！';
+                document.getElementById('result').innerHTML = `
+                    <b><i class="fas fa-chart-line"></i> 最终MSE：</b>
+                    <span style='color: var(--primary-blue); font-size: 1.3em; font-weight: bold;'>${data.final_mse}</span>
+                    <br><b><i class="fas fa-waveform"></i> MSE收敛曲线：</b>
+                `;
+                document.getElementById('logBox').innerText += '\n[系统] ✓ 计算完成！';
                 drawCurve(data.mse_curve);
+                document.getElementById('finalMseChip').innerHTML = `<i class="fas fa-chart-line"></i> Final MSE: ${data.final_mse.toFixed(4)}`;
             } else {
                 document.getElementById('error').innerText = data.error || '计算失败';
-                document.getElementById('logBox').innerText += '\n[系统] 计算失败！';
+                document.getElementById('logBox').innerText += '\n[系统] ✗ 计算失败！';
+                document.getElementById('statusLabel').innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i> 计算失败';
             }
         } catch (err) {
             clearInterval(interval);
-            clearInterval(logTimer);
-            clearInterval(mseTimer);
             document.getElementById('progressBg').style.display = 'none';
             document.getElementById('loading').style.display = 'none';
             document.getElementById('submitBtn').disabled = false;
             document.getElementById('error').innerText = '网络错误或服务器无响应';
-            document.getElementById('logBox').innerText += '\n[系统] 网络错误或服务器无响应';
+            document.getElementById('logBox').innerText += '\n[系统] ✗ 网络错误或服务器无响应';
+            document.getElementById('statusLabel').innerHTML = '<i class="fas fa-plug" style="color:#dc2626;"></i> 连接失败';
         }
     };
-
 
     function resetUI() {
         document.getElementById('progressBg').style.display = 'none';
         document.getElementById('loading').style.display = 'none';
         document.getElementById('submitBtn').disabled = false;
+        document.getElementById('statusLabel').innerHTML = '<i class="fas fa-circle" style="color:#22c55e; font-size: 0.7rem;"></i> 空闲';
     }
 
     function drawCurve(curve) {
         if (!curve || !curve.length) return;
         const curveDiv = document.getElementById('curve');
-        curveDiv.innerHTML = '<canvas id=\"mseChart\" width=\"420\" height=\"220\"></canvas>';
+        curveDiv.innerHTML = '<canvas id="mseChart" style="width:100%; max-height: 400px;"></canvas>';
         const ctx = document.getElementById('mseChart').getContext('2d');
         if (chart) chart.destroy();
         chart = new Chart(ctx, {
@@ -460,33 +679,190 @@
                 datasets: [{
                     label: 'MSE',
                     data: curve,
-                    borderColor: '#2d7ff9',
-                    backgroundColor: 'rgba(45,127,249,0.08)',
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     borderWidth: 3,
-                    pointRadius: 2,
-                    pointBackgroundColor: '#2d7ff9',
-                    tension: 0.22,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#0891b2',
+                    pointBorderColor: '#fff',
+                    tension: 0.3,
                     fill: true
                 }]
             },
             options: {
-                responsive: false,
+                responsive: true,
+                maintainAspectRatio: true,
                 plugins: {
-                    legend: { display: false }
+                    legend: { labels: { color: '#475569' } }
                 },
                 scales: {
                     x: {
-                        title: { display: true, text: '迭代次数', color: '#222', font: { size: 14 } },
-                        grid: { color: '#e0e7ff' }
+                        title: { display: true, text: '迭代次数', color: '#475569' },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: { color: '#475569' }
                     },
                     y: {
-                        title: { display: true, text: 'MSE', color: '#222', font: { size: 14 } },
-                        grid: { color: '#e0e7ff' }
+                        title: { display: true, text: 'MSE', color: '#475569' },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: { color: '#475569' }
                     }
                 }
             }
         });
     }
+
+    async function loadNodes() {
+        const container = document.getElementById('nodesContainer');
+        container.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 正在加载节点...';
+        try {
+            const resp = await fetch('http://localhost:8000/api/nodes');
+            if (!resp.ok) throw new Error('无法获取节点信息');
+            const data = await resp.json();
+            container.innerHTML = '';
+            if (!data.nodes || !data.nodes.length) {
+                container.innerText = '未配置边缘节点';
+                document.getElementById('nodeCountChip').innerHTML = '<i class="fas fa-microchip"></i> Nodes: 0';
+                return;
+            }
+            const shown = data.nodes.slice(0, 3);
+            shown.forEach((n, idx) => {
+                const chip = document.createElement('label');
+                chip.className = 'chip';
+                chip.style.cursor = 'pointer';
+                chip.style.marginRight = '10px';
+                chip.style.marginBottom = '8px';
+                chip.style.display = 'inline-flex';
+                chip.innerHTML = `
+                    <input type="checkbox" id="node_chk_${idx}" data-addr="${n.address}" checked style="width: 16px; height: 16px; margin-right: 8px;">
+                    <span style="margin-right:8px;"><i class="fas fa-server"></i> ${n.name}</span>
+                    <span id="node_state_${n.name}" data-name="${n.name}" style="font-size:0.85rem;color:#34495e;opacity:0.9;">-</span>
+                    <span style="font-size:0.8rem;color:#7f8c8d;margin-left:8px;">${n.address}</span>
+                `;
+                container.appendChild(chip);
+            });
+            // debug: print created node elements
+            console.debug('loadNodes created node chips:', shown.map(n => n.name));
+            document.getElementById('nodeCountChip').innerHTML = `<i class="fas fa-microchip"></i> Nodes: ${shown.length}`;
+        } catch (e) {
+            container.innerText = '加载节点失败';
+            console.error(e);
+        }
+    }
+
+    // Poll backend status endpoint and update UI
+    let lastStage = null;
+    async function pollStatus() {
+        try {
+            const resp = await fetch('http://localhost:8000/api/status');
+            if (!resp.ok) {
+                console.debug('pollStatus: non-ok response', resp.status);
+                return;
+            }
+            const s = await resp.json();
+            console.debug('pollStatus got', s);
+            if (!s) return;
+
+            // update UI elements unconditionally
+            const stage = s.stage || 'idle';
+            const detail = s.detail || '';
+            document.getElementById('statusLabel').innerText = stage;
+            if (Array.isArray(s.nodes_busy)) {
+                document.getElementById('nodeCountChip').innerText = 'Nodes: ' + (s.nodes_busy.length || 0);
+            }
+            if (s.last_mse !== null && s.last_mse !== undefined) {
+                const val = (typeof s.last_mse === 'number') ? s.last_mse.toFixed(6) : s.last_mse;
+                document.getElementById('finalMseChip').innerText = 'Final MSE: ' + val;
+            }
+
+            const logBox = document.getElementById('logBox');
+            const timeLabel = (s.timestamp) ? new Date(s.timestamp * 1000).toLocaleTimeString() : new Date().toLocaleTimeString();
+            // append when stage changed to avoid duplicating the same stage repeatedly
+            if (stage !== lastStage) {
+                logBox.innerText += `\n[状态] ${timeLabel} ${stage} ${detail}`;
+                lastStage = stage;
+            }
+            // update per-node states if provided
+            if (s.node_states) {
+                try {
+                    Object.keys(s.node_states).forEach(k => {
+                        const el = document.getElementById('node_state_' + k);
+                        if (el) el.innerText = s.node_states[k];
+                    });
+                } catch (e) {
+                    console.debug('node_states render error', e);
+                }
+            }
+            logBox.scrollTop = logBox.scrollHeight;
+        } catch (e) {
+            console.debug('pollStatus error', e);
+        }
+    }
+
+    // start polling every second and run immediately once
+    setInterval(pollStatus, 1000);
+    pollStatus();
+
+    // Poll server logs and display
+    async function pollLogs() {
+        try {
+            const resp = await fetch('http://localhost:8000/api/logs?n=300');
+            if (!resp.ok) return;
+            const j = await resp.json();
+            const logBox = document.getElementById('logBox');
+            if (!(j && Array.isArray(j.lines))) return;
+
+            // replace log content (server is authoritative)
+            logBox.innerText = j.lines.join('\n');
+
+            // parse logs for status and per-node state updates
+            const nodeStates = {};
+            let lastStatusLine = '';
+            for (let i = 0; i < j.lines.length; i++) {
+                const line = j.lines[i];
+                // match '[status] set edge1 -> computing iter 0' style
+                const m = line.match(/set\s+(\S+)\s+->\s+(.+)$/);
+                if (m) {
+                    const name = m[1].trim();
+                    const state = m[2].trim();
+                    nodeStates[name] = state;
+                }
+                // capture a readable last status-like line
+                if (line.indexOf('[status]') !== -1 || /正在分布式计算|计算完成|生成密钥|init|iterating|error/i.test(line)) {
+                    lastStatusLine = line;
+                }
+            }
+
+            // update status label with lastStatusLine if available, else last log line
+            const statusLabel = document.getElementById('statusLabel');
+            if (lastStatusLine) {
+                // show portion after timestamp if present
+                const afterTs = lastStatusLine.replace(/^\[.*?\]\s*/,'');
+                statusLabel.innerText = afterTs.slice(0, 80);
+            } else {
+                statusLabel.innerText = j.lines.length ? j.lines[j.lines.length-1].slice(0,80) : 'idle';
+            }
+
+            // apply node states to UI elements (look up by data-name too)
+            Object.keys(nodeStates).forEach(k => {
+                const id = 'node_state_' + k;
+                let el = document.getElementById(id);
+                if (!el) {
+                    // try matching by data-name attribute
+                    el = Array.from(document.querySelectorAll('[data-name]')).find(x => (x.dataset.name || '').trim() === k);
+                }
+                if (el) el.innerText = nodeStates[k];
+            });
+
+            logBox.scrollTop = logBox.scrollHeight;
+        } catch (e) {
+            console.debug('pollLogs error', e);
+        }
+    }
+    setInterval(pollLogs, 1000);
+    pollLogs();
+
+    // initial load
+    loadNodes();
 </script>
 </body>
 </html>
