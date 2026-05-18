@@ -17,7 +17,7 @@ with open(f'/mnt/edge_data_k{k}.pkl', 'rb') as f:
 
 pub       = data['pub']
 alpha_hat = data['alpha_hat']
-B_k       = data['B_k']   # 可能是完整矩阵(Nk×Nk)或对角向量(Nk,)
+B_k       = data['B_k']
 rho       = data['rho']
 delta     = data['delta']
 ZMIN      = data['ZMIN']
@@ -26,20 +26,15 @@ ZMAX      = data['ZMAX']
 with open(f'/mnt/iter_data_k{k}.pkl', 'rb') as f:
     iter_data = pickle.load(f)
 
-zk = iter_data['zk']
-vk = iter_data['vk']
-Nk = len(zk)
+# 直接使用主节点发来的密文（论文正确实现）
+c_z = iter_data['zk_hat']
+c_v = iter_data['vk_hat']
+Nk = len(c_z)
 
-# 判断是完整矩阵还是对角向量
-is_full_matrix = (B_k.ndim == 2)
-
-# 量化z和v
-q_z = quantize2_safe(zk,  delta, ZMIN, ZMAX)
-q_v = quantize2_safe(-vk, delta, ZMIN, ZMAX)
-c_z = [encrypt(int(qi), pub) for qi in q_z]
-c_v = [encrypt(int(qi), pub) for qi in q_v]
+# 计算 c_zv[j] = encrypt(q_z[j] + q_v[j])
 c_zv = [homo_add(c_z[j], c_v[j], pub) for j in range(Nk)]
 
+is_full_matrix = (B_k.ndim == 2)
 x_hat_k = []
 
 if is_full_matrix:
