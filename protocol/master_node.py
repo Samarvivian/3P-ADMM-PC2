@@ -8,14 +8,14 @@ import os
 sys.path.append('/mnt/3p-admm-pc2')
 from crypto.paillier import generate_keypair, encrypt, decrypt, homo_add, homo_mul_const
 try:
-    from crypto.paillier_gpu import encrypt_batch_gpu
+    from crypto.paillier_gpu import encrypt_batch_gpu, encrypt_batch_gpu_fast, precompute_rn
     USE_GPU = True
     print('GPU加密已启用')
 except Exception as e:
     USE_GPU = False
     print(f'GPU加密不可用，使用CPU: {e}')
 try:
-    from crypto.paillier_gpu import encrypt_batch_gpu
+    from crypto.paillier_gpu import encrypt_batch_gpu, encrypt_batch_gpu_fast, precompute_rn
     USE_GPU = True
     print('GPU加密已启用')
 except Exception as e:
@@ -190,6 +190,16 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
 
     # 数据安全共享阶段
     safe_set_status('sharing_data', '发送加密数据到边缘节点')
+    # 预计算r^n（只做一次，后续迭代复用）
+    if USE_GPU:
+        print('【预计算】预计算r^n...')
+        import time
+        t0 = time.time()
+        rn_precomputed = precompute_rn(pub, Nk)
+        print(f'  预计算完成: {time.time()-t0:.2f}s（后续{max_iter}轮迭代直接复用）')
+    else:
+        rn_precomputed = None
+
     print("【数据安全共享】发送加密数据到边缘节点...")
     alpha_hats = []
     B_bar_qs = []
@@ -236,9 +246,21 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
                     print(f'[status] set {node_name} -> computing iter {t}')
             except Exception:
                 pass
+            # 主节点加密z和v再发给边缘节点（论文Algorithm 1第13步）
+            zk_plain = rho * z[k*Nk:(k+1)*Nk]
+            vk_plain = rho * v[k*Nk:(k+1)*Nk]
+            q_z = quantize2(zk_plain, delta, ZMIN, ZMAX)
+            q_v = quantize2(-vk_plain, delta, ZMIN, ZMAX)
+            if USE_GPU:
+                # 使用预计算的r^n，只需算g^m，速度大幅提升
+                zk_hat = encrypt_batch_gpu_fast([int(qi) for qi in q_z], pub, rn_precomputed)
+                vk_hat = encrypt_batch_gpu_fast([int(qi) for qi in q_v], pub, rn_precomputed)
+            else:
+                zk_hat = [encrypt(int(qi), pub) for qi in q_z]
+                vk_hat = [encrypt(int(qi), pub) for qi in q_v]
             iter_data = {
-                'zk': rho * z[k*Nk:(k+1)*Nk],  # 乘以rho
-                'vk': rho * v[k*Nk:(k+1)*Nk],  # 乘以rho
+                'zk_hat': zk_hat,   # 加密的z
+                'vk_hat': vk_hat,   # 加密的v
                 't': t,
             }
             send_to_edge(nodes[k]['host'], nodes[k]['port'],
