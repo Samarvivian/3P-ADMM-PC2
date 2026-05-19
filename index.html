@@ -32,7 +32,7 @@
             min-height: 100vh;
             background: linear-gradient(135deg, #e8f0ff 0%, #f5f7fa 50%, #e2e8f0 100%);
             color: var(--text-dark);
-            font-size: 24px;
+            font-size: 28px;
         }
 
         /* 导航栏 - 无边框半透明 */
@@ -106,6 +106,7 @@
             border-radius: 28px;
             padding: 32px;
             transition: all 0.3s ease;
+            font-size: 1.5rem;
         }
 
         .visualization-panel {
@@ -497,23 +498,23 @@
             </div>
             <div class="curve" id="curve"></div>
             <h4 style="margin-top:18px;">GPU 指标</h4>
-            <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
-                <div style="flex:1;min-width:260px;">
-                    <canvas id="gpuUtilChart" style="width:100%;max-height:220px"></canvas>
-                </div>
-                <div style="flex:1;min-width:260px;">
-                    <canvas id="gpuMemChart" style="width:100%;max-height:220px"></canvas>
-                </div>
+            <div style="display:flex;flex-direction:column;gap:18px;">
+            <div>
+                <canvas id="gpuUtilChart" style="width:100%;max-height:220px"></canvas>
+            </div>
+            <div>
+                <canvas id="gpuMemChart" style="width:100%;max-height:220px"></canvas>
+            </div>
             </div>
             <h4 style="margin-top:18px;">系统指标（CPU / 内存）</h4>
-            <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
-                <div style="flex:1;min-width:260px;">
-                    <canvas id="cpuUtilChart" style="width:100%;max-height:220px"></canvas>
-                </div>
-                <div style="flex:1;min-width:260px;">
-                    <canvas id="ramChart" style="width:100%;max-height:220px"></canvas>
-                </div>
+            <div style="display:flex;flex-direction:column;gap:18px;">
+            <div>
+                <canvas id="cpuUtilChart" style="width:100%;max-height:220px"></canvas>
             </div>
+            <div>
+                <canvas id="ramChart" style="width:100%;max-height:220px"></canvas>
+            </div>
+</div>
         </div>
     </div>
 </div>
@@ -608,7 +609,11 @@
         try {
             mseHistory = [];
             mseIterations = [];
-            document.getElementById('curve').innerHTML = '';
+            if (chart) {
+    chart.data.labels = [];
+    chart.data.datasets[0].data = [];
+    chart.update('none');
+}
         } catch (err) { /* ignore if not initialized */ }
         document.getElementById('result').style.display = 'none';
         document.getElementById('error').innerText = '';
@@ -767,23 +772,34 @@
     }
 
     function drawCurve(curve) {
-        // normalize input: accept number, string, or array
-        try {
-            if (curve === null || curve === undefined) return;
-            if (typeof curve === 'number' || typeof curve === 'string') {
-                curve = [Number(curve)];
-            }
-            if (!Array.isArray(curve)) return;
-            if (!curve.length) return;
-        } catch (e) {
-            console.error('drawCurve normalize error', e);
-            return;
+    try {
+        if (curve === null || curve === undefined) return;
+        if (typeof curve === 'number' || typeof curve === 'string') {
+            curve = [Number(curve)];
         }
+        if (!Array.isArray(curve)) return;
+        if (!curve.length) return;
+    } catch (e) {
+        console.error('drawCurve normalize error', e);
+        return;
+    }
 
-        const curveDiv = document.getElementById('curve');
-        curveDiv.innerHTML = '<canvas id="mseChart" style="width:100%; max-height: 400px;"></canvas>';
-        const ctx = document.getElementById('mseChart').getContext('2d');
-        if (chart) chart.destroy();
+    const curveDiv = document.getElementById('curve');
+
+    // 只在第一次创建canvas，不反复重建
+    if (!document.getElementById('mseChart')) {
+        curveDiv.innerHTML = '<canvas id="mseChart" style="width:100%; max-height:400px;"></canvas>';
+    }
+
+    const ctx = document.getElementById('mseChart').getContext('2d');
+
+    if (chart) {
+        // 已有图表，直接更新数据
+        chart.data.labels = curve.map((_, i) => i + 1);
+        chart.data.datasets[0].data = curve;
+        chart.update('none');
+    } else {
+        // 第一次创建图表
         chart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -804,9 +820,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
-                plugins: {
-                    legend: { labels: { color: '#475569' } }
-                },
+                plugins: { legend: { labels: { color: '#475569' } } },
                 scales: {
                     x: {
                         title: { display: true, text: '迭代次数', color: '#475569' },
@@ -822,6 +836,50 @@
             }
         });
     }
+}
+
+    //     const curveDiv = document.getElementById('curve');
+    //     curveDiv.innerHTML = '<canvas id="mseChart" style="width:100%; max-height: 400px;"></canvas>';
+    //     const ctx = document.getElementById('mseChart').getContext('2d');
+    //     if (chart) chart.destroy();
+    //     chart = new Chart(ctx, {
+    //         type: 'line',
+    //         data: {
+    //             labels: curve.map((_, i) => i + 1),
+    //             datasets: [{
+    //                 label: 'MSE',
+    //                 data: curve,
+    //                 borderColor: '#3b82f6',
+    //                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    //                 borderWidth: 3,
+    //                 pointRadius: 3,
+    //                 pointBackgroundColor: '#0891b2',
+    //                 pointBorderColor: '#fff',
+    //                 tension: 0.3,
+    //                 fill: true
+    //             }]
+    //         },
+    //         options: {
+    //             responsive: true,
+    //             maintainAspectRatio: true,
+    //             plugins: {
+    //                 legend: { labels: { color: '#475569' } }
+    //             },
+    //             scales: {
+    //                 x: {
+    //                     title: { display: true, text: '迭代次数', color: '#475569' },
+    //                     grid: { color: 'rgba(0, 0, 0, 0.05)' },
+    //                     ticks: { color: '#475569' }
+    //                 },
+    //                 y: {
+    //                     title: { display: true, text: 'MSE', color: '#475569' },
+    //                     grid: { color: 'rgba(0, 0, 0, 0.05)' },
+    //                     ticks: { color: '#475569' }
+    //                 }
+    //             }
+    //         }
+    //     });
+    // }
 
     async function loadNodes() {
         const container = document.getElementById('nodesContainer');
