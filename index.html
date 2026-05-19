@@ -604,6 +604,12 @@
 
     document.getElementById('uploadForm').onsubmit = async function(e) {
         e.preventDefault();
+        // reset client-side MSE history for a fresh run
+        try {
+            mseHistory = [];
+            mseIterations = [];
+            document.getElementById('curve').innerHTML = '';
+        } catch (err) { /* ignore if not initialized */ }
         document.getElementById('result').style.display = 'none';
         document.getElementById('error').innerText = '';
         document.getElementById('curve').innerHTML = '';
@@ -653,22 +659,94 @@
             const data = await res.json();
             document.getElementById('loading').style.display = 'none';
             document.getElementById('submitBtn').disabled = false;
-            document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 计算完成';
 
-            if (res.ok) {
-                document.getElementById('result').style.display = 'block';
-                document.getElementById('result').innerHTML = `
-                    <b><i class="fas fa-chart-line"></i> 最终MSE：</b>
-                    <span style='color: var(--primary-blue); font-size: 1.3em; font-weight: bold;'>${data.final_mse}</span>
-                    <br><b><i class="fas fa-waveform"></i> MSE收敛曲线：</b>
-                `;
-                document.getElementById('logBox').innerText += '\n[系统] ✓ 计算完成！';
-                drawCurve(data.mse_curve);
-                document.getElementById('finalMseChip').innerHTML = `<i class="fas fa-chart-line"></i> Final MSE: ${data.final_mse.toFixed(4)}`;
+            // If backend returned job_id, poll for results
+            if (data && data.job_id) {
+                const jobId = data.job_id;
+                document.getElementById('statusLabel').innerHTML = '<i class="fas fa-hourglass-half"></i> 任务已提交，等待结果...';
+                    // If backend provided a preview curve, draw it immediately
+                    if (data.mse_curve && Array.isArray(data.mse_curve) && data.mse_curve.length) {
+                        try {
+                            document.getElementById('result').style.display = 'block';
+                            document.getElementById('result').innerHTML = `
+                                <b><i class="fas fa-chart-line"></i> 预览 MSE：</b>
+                                <span style='color: var(--primary-blue); font-size: 1.3em; font-weight: bold;'>${(data.final_mse || data.mse_curve[data.mse_curve.length-1]).toFixed(4)}</span>
+                                <br><b><i class="fas fa-waveform"></i> MSE收敛曲线（预览）：</b>
+                            `;
+                            drawCurve(data.mse_curve);
+                        } catch (e) { console.error('draw preview error', e); }
+                    }
+                const poll = async () => {
+                    try {
+                        const r = await fetch(`http://localhost:8000/api/job/${jobId}`);
+                        if (!r.ok) return null;
+                        return await r.json();
+                    } catch (e) {
+                        console.error('poll job error', e);
+                        return null;
+                    }
+                };
+
+                const jobInterval = setInterval(async () => {
+                    const jr = await poll();
+                    if (!jr) return;
+                    // still running
+                    if (jr.status && jr.status === 'running') return;
+                    clearInterval(jobInterval);
+                    if (jr.error) {
+                        document.getElementById('error').innerText = jr.error || '计算失败';
+                        document.getElementById('logBox').innerText += '\n[系统] ✗ 计算失败！';
+                        document.getElementById('statusLabel').innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i> 计算失败';
+                        return;
+                    }
+                    // prefer mse_curve, fallback to final_mse
+                    let curve = jr.mse_curve ?? null;
+                    if ((!curve || !curve.length) && (jr.final_mse !== undefined && jr.final_mse !== null)) {
+                        curve = [Number(jr.final_mse)];
+                        document.getElementById('logBox').innerText += '\n[系统] 只有最终MSE可用，绘制单点曲线';
+                    }
+                    if (curve && curve.length) {
+                        document.getElementById('result').style.display = 'block';
+                        document.getElementById('result').innerHTML = `
+                            <b><i class="fas fa-chart-line"></i> 最终MSE：</b>
+                            <span style='color: var(--primary-blue); font-size: 1.3em; font-weight: bold;'>${jr.final_mse}</span>
+                            <br><b><i class="fas fa-waveform"></i> MSE收敛曲线：</b>
+                        `;
+                        try { drawCurve(curve); } catch (e) { console.error('drawCurve error', e); }
+                    }
+                    if (typeof jr.final_mse === 'number') {
+                        document.getElementById('finalMseChip').innerHTML = `<i class="fas fa-chart-line"></i> Final MSE: ${jr.final_mse.toFixed(4)}`;
+                    }
+                    document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 计算完成';
+                }, 1000);
+
             } else {
-                document.getElementById('error').innerText = data.error || '计算失败';
-                document.getElementById('logBox').innerText += '\n[系统] ✗ 计算失败！';
-                document.getElementById('statusLabel').innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i> 计算失败';
+                // synchronous immediate result
+                if (res.ok) {
+                    // try to draw curve; if missing but final_mse exists, fallback
+                    let curve = data.mse_curve ?? null;
+                    if ((!curve || !curve.length) && (data.final_mse !== undefined && data.final_mse !== null)) {
+                        curve = [Number(data.final_mse)];
+                        document.getElementById('logBox').innerText += '\n[系统] 只有最终MSE可用，绘制单点曲线';
+                    }
+                    if (curve && curve.length) {
+                        document.getElementById('result').style.display = 'block';
+                        document.getElementById('result').innerHTML = `
+                            <b><i class="fas fa-chart-line"></i> 最终MSE：</b>
+                            <span style='color: var(--primary-blue); font-size: 1.3em; font-weight: bold;'>${data.final_mse}</span>
+                            <br><b><i class="fas fa-waveform"></i> MSE收敛曲线：</b>
+                        `;
+                        try { drawCurve(curve); } catch (e) { console.error('drawCurve error', e); }
+                    }
+                    if (typeof data.final_mse === 'number') {
+                        document.getElementById('finalMseChip').innerHTML = `<i class="fas fa-chart-line"></i> Final MSE: ${data.final_mse.toFixed(4)}`;
+                    }
+                    document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 计算完成';
+                } else {
+                    document.getElementById('error').innerText = data.error || '计算失败';
+                    document.getElementById('logBox').innerText += '\n[系统] ✗ 计算失败！';
+                    document.getElementById('statusLabel').innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i> 计算失败';
+                }
             }
         } catch (err) {
             clearInterval(interval);
@@ -689,7 +767,19 @@
     }
 
     function drawCurve(curve) {
-        if (!curve || !curve.length) return;
+        // normalize input: accept number, string, or array
+        try {
+            if (curve === null || curve === undefined) return;
+            if (typeof curve === 'number' || typeof curve === 'string') {
+                curve = [Number(curve)];
+            }
+            if (!Array.isArray(curve)) return;
+            if (!curve.length) return;
+        } catch (e) {
+            console.error('drawCurve normalize error', e);
+            return;
+        }
+
         const curveDiv = document.getElementById('curve');
         curveDiv.innerHTML = '<canvas id="mseChart" style="width:100%; max-height: 400px;"></canvas>';
         const ctx = document.getElementById('mseChart').getContext('2d');
@@ -773,6 +863,9 @@
 
     // Poll backend status endpoint and update UI
     let lastStage = null;
+    // client-side MSE history for live-updating the curve without backend changes
+    let mseHistory = [];
+    let mseIterations = [];
     async function pollStatus() {
         try {
             const resp = await fetch('http://localhost:8000/api/status');
@@ -792,8 +885,16 @@
                 document.getElementById('nodeCountChip').innerText = 'Nodes: ' + (s.nodes_busy.length || 0);
             }
             if (s.last_mse !== null && s.last_mse !== undefined) {
-                const val = (typeof s.last_mse === 'number') ? s.last_mse.toFixed(6) : s.last_mse;
-                document.getElementById('finalMseChip').innerText = 'Final MSE: ' + val;
+                const val = typeof s.last_mse === 'number' ? s.last_mse : Number(s.last_mse);
+                if (!isNaN(val) && isFinite(val)) {
+                    // only append when value changes to avoid duplicates
+                    if (!mseHistory.length || mseHistory[mseHistory.length - 1] !== val) {
+                        mseHistory.push(val);
+                        mseIterations.push(mseHistory.length);
+                        try { drawCurve(mseHistory); } catch (e) { console.error('drawCurve error', e); }
+                    }
+                }
+                document.getElementById('finalMseChip').innerHTML = `<i class="fas fa-chart-line"></i> Final MSE: ${isNaN(val)?'--':val.toFixed(6)}`;
             }
 
             const logBox = document.getElementById('logBox');
