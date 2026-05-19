@@ -12,6 +12,9 @@ from collections import deque
 import threading
 import builtins
 import time
+import traceback
+from typing import Any, Dict
+import json
 
 # 假设你的主流程在experiments/test_distributed_pc2.py或相关模块
 from protocol.master_node import run_distributed
@@ -213,6 +216,46 @@ def get_logs(n: int = 200):
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
+
+@app.post('/api/logs/clear')
+def clear_logs():
+    """Clear the in-memory server log buffer."""
+    try:
+        with _log_lock:
+            _log_buffer.clear()
+        print('[logs] cleared by API')
+        return {"status": "ok"}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post('/api/debug_gpu')
+def debug_gpu(iters: int = 10, size: int = 9000):
+    """Trigger a background GPU workload (encrypt_batch_gpu) repeatedly to make GPU utilization visible in slow samplers.
+    Only use for local debugging. Returns immediately while job runs in background.
+    """
+    def _worker(i, s):
+        try:
+            print(f'[debug_gpu] start iterations={i} size={s}')
+            # lazy import GPU function
+            try:
+                from crypto.paillier_gpu import encrypt_batch_gpu
+                from crypto.paillier import generate_keypair
+            except Exception as ex:
+                print('[debug_gpu] GPU module import failed:', ex)
+                return
+            pub, priv = generate_keypair(bits=1024)
+            messages = list(range(s))
+            for _ in range(i):
+                encrypt_batch_gpu(messages, pub)
+            print('[debug_gpu] finished')
+        except Exception:
+            print('[debug_gpu] error', traceback.format_exc())
+
+    th = threading.Thread(target=_worker, args=(iters, size), daemon=True)
+    th.start()
+    return {"status": "started", "iters": iters, "size": size}
+
 @app.get("/")
 def root():
     return {"msg": "无人机数据安全回传与分布式隐私计算平台后端已启动"}
@@ -246,5 +289,137 @@ def get_nodes():
                 "address": f"{info.get('host')}:{info.get('port')}"
             })
         return {"nodes": nodes}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# --- GPU metrics endpoint ---
+# in-memory deque to hold recent GPU samples posted by monitor
+# each entry: { 'ts': float, 'index': int, 'utilization': float, 'memory_used_mb': float, 'memory_total_mb': float }
+_gpu_samples = deque(maxlen=1200)  # default keep last 1200 samples (~10 minutes at 0.5s)
+_gpu_lock = threading.Lock()
+
+# in-memory deque for system samples (cpu, ram)
+# each entry: { 'ts': float, 'cpu_util': float, 'ram_used_gb': float, 'ram_total_gb': float }
+_system_samples = deque(maxlen=1200)
+_system_lock = threading.Lock()
+
+
+@app.post('/api/gpu_sample')
+def post_gpu_sample(sample: Dict[str, Any]):
+    """Receive a single GPU sample from experiments/monitor_gpu.py and store in a rolling in-memory deque.
+
+    Expected JSON shape (one of these):
+      {"ts": 12345.6, "gpus": [{"index":0, "utilization":10.0, "memory_used_mb":100, "memory_total_mb":4000}, ...]}
+    or normalized single-gpu sample:
+      {"ts": 12345.6, "index": 0, "utilization": 10.0, "memory_used_mb": 100, "memory_total_mb": 4000}
+    The endpoint will store one entry per-GPU (flattened) so front-end can request recent samples.
+    """
+    try:
+        # accept both batched 'gpus' or single-gpu flat formats
+        ts = float(sample.get('ts', time.time()))
+        entries = []
+        if 'gpus' in sample and isinstance(sample['gpus'], list):
+            for g in sample['gpus']:
+                try:
+                    entries.append({
+                        'ts': ts,
+                        'index': int(g.get('index', 0)),
+                        'utilization': float(g.get('utilization', 0.0)),
+                        'memory_used_mb': float(g.get('memory_used_mb', g.get('memory_used', 0.0))),
+                        'memory_total_mb': float(g.get('memory_total_mb', g.get('memory_total', 0.0))),
+                    })
+                except Exception:
+                    continue
+        else:
+            # flat sample
+            try:
+                entries.append({
+                    'ts': ts,
+                    'index': int(sample.get('index', 0)),
+                    'utilization': float(sample.get('utilization', 0.0)),
+                    'memory_used_mb': float(sample.get('memory_used_mb', sample.get('memory_used', 0.0))),
+                    'memory_total_mb': float(sample.get('memory_total_mb', sample.get('memory_total', 0.0))),
+                })
+            except Exception:
+                pass
+
+        if entries:
+            with _gpu_lock:
+                for e in entries:
+                    _gpu_samples.append(e)
+            try:
+                print(f'[metrics] received gpu samples added={len(entries)} newest_ts={entries[-1].get("ts")}, index={entries[-1].get("index")}')
+            except Exception:
+                pass
+        return {"status": "ok", "added": len(entries)}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post('/api/system_sample')
+def post_system_sample(sample: Dict[str, Any]):
+    """Receive a single system sample from monitor and store in-memory deque.
+
+    Expected JSON shape: {"ts": 12345.6, "cpu_util": 12.3, "ram_used_gb": 3.2, "ram_total_gb": 16.0}
+    """
+    try:
+        ts = float(sample.get('ts', time.time()))
+        cpu = float(sample.get('cpu_util', sample.get('cpu', 0.0)))
+        ram_used = float(sample.get('ram_used_gb', sample.get('ram_used', 0.0)))
+        ram_total = float(sample.get('ram_total_gb', sample.get('ram_total', 0.0)))
+        entry = {'ts': ts, 'cpu_util': cpu, 'ram_used_gb': ram_used, 'ram_total_gb': ram_total}
+        with _system_lock:
+            _system_samples.append(entry)
+        try:
+            print(f'[metrics] received system sample ts={entry.get("ts")}, cpu={entry.get("cpu_util")}, ram={entry.get("ram_used_gb")}')
+        except Exception:
+            pass
+        return {"status": "ok"}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get('/api/system_metrics')
+def system_metrics(n: int = 300):
+    """Return recent system samples from in-memory deque.
+
+    Returns: {"metrics": [{"ts": <sec>, "cpu_util": <float>, "ram_used_gb": <float>, "ram_total_gb": <float>}, ...]}
+    """
+    try:
+        with _system_lock:
+            items = list(_system_samples)
+        return {"metrics": items[-int(n):]}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get('/api/metrics_debug')
+def metrics_debug():
+    """Return counts and last sample for GPU and system metrics (diagnostic)."""
+    try:
+        with _gpu_lock:
+            gcount = len(_gpu_samples)
+            glut = _gpu_samples[-1] if gcount else None
+        with _system_lock:
+            scount = len(_system_samples)
+            slut = _system_samples[-1] if scount else None
+        return {"gpu_count": gcount, "last_gpu": glut, "system_count": scount, "last_system": slut}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get('/api/gpu_metrics')
+def gpu_metrics(n: int = 300, gpu_index: int = 0):
+    """Return recent GPU metrics from the in-memory deque, optionally filtered to one GPU index.
+
+    Returns: {"metrics": [{"ts": <sec>, "utilization": <float>, "memory_used_mb": <float>, "memory_total_mb": <float>, "index": <int>} ...]}
+    """
+    try:
+        with _gpu_lock:
+            items = list(_gpu_samples)
+        if gpu_index is not None:
+            items = [i for i in items if i.get('index', 0) == int(gpu_index)]
+        return {"metrics": items[-int(n):]}
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
