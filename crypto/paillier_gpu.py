@@ -156,6 +156,7 @@ def encrypt_batch_gpu_crt(messages, public_key, p, q, nodes):
         for j in range(4): m_all[:,j]=(mu64>>np.uint64(16*j))&np.uint64(0xFFFF)
     else:
         for i,m in enumerate(messages):
+            m = max(0, int(m))  # 防止负数
             b=m.to_bytes(LEN*2,'little')
             m_all[i]=np.frombuffer(b,dtype=np.uint16).astype(np.uint32).copy()
     m_all = np.ascontiguousarray(m_all)
@@ -291,6 +292,7 @@ def encrypt_batch_gpu_fast(messages, public_key, rn_precomputed=None):
         for j in range(4): m_all[:,j]=(mu64>>np.uint64(16*j))&np.uint64(0xFFFF)
     else:
         for i,m in enumerate(messages):
+            m = max(0, int(m))  # 防止负数
             b=m.to_bytes(LEN*2,'little')
             m_all[i]=np.frombuffer(b,dtype=np.uint16).astype(np.uint32).copy()
     m_all = np.ascontiguousarray(m_all)
