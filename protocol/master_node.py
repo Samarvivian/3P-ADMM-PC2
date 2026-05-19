@@ -190,15 +190,16 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
 
     # 数据安全共享阶段
     safe_set_status('sharing_data', '发送加密数据到边缘节点')
-    # 预计算r^n（只做一次，后续迭代复用）
+    # 预计算r^n（预计算多批，每轮用不同的r^n避免安全问题）
     if USE_GPU:
         print('【预计算】预计算r^n...')
         import time
         t0 = time.time()
-        rn_precomputed = precompute_rn(pub, Nk)
-        print(f'  预计算完成: {time.time()-t0:.2f}s（后续{max_iter}轮迭代直接复用）')
+        # 预计算2批r^n，奇偶轮交替使用
+        rn_batch = [precompute_rn(pub, Nk), precompute_rn(pub, Nk)]
+        print(f'  预计算完成: {time.time()-t0:.2f}s（2批r^n交替使用）')
     else:
-        rn_precomputed = None
+        rn_batch = None
 
     print("【数据安全共享】发送加密数据到边缘节点...")
     alpha_hats = []
@@ -238,7 +239,6 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
         # 发送 zk, vk 给各边缘节点并触发计算
         safe_set_status('iterating', f'触发第 {t} 轮边缘计算', current_iter=t)
         for k in range(K):
-            # mark node as computing this iteration
             try:
                 if protocol_status is not None:
                     node_name = nodes[k].get('name', f'edge{k}')
@@ -246,21 +246,21 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
                     print(f'[status] set {node_name} -> computing iter {t}')
             except Exception:
                 pass
-            # 主节点加密z和v再发给边缘节点（论文Algorithm 1第13步）
             zk_plain = rho * z[k*Nk:(k+1)*Nk]
             vk_plain = rho * v[k*Nk:(k+1)*Nk]
             q_z = quantize2(zk_plain, delta, ZMIN, ZMAX)
             q_v = quantize2(-vk_plain, delta, ZMIN, ZMAX)
             if USE_GPU:
-                # 使用预计算的r^n，只需算g^m，速度大幅提升
+                # 奇偶轮交替使用不同的r^n，避免复用同一批r
+                rn_precomputed = rn_batch[t % 2]
                 zk_hat = encrypt_batch_gpu_fast([int(qi) for qi in q_z], pub, rn_precomputed)
                 vk_hat = encrypt_batch_gpu_fast([int(qi) for qi in q_v], pub, rn_precomputed)
             else:
                 zk_hat = [encrypt(int(qi), pub) for qi in q_z]
                 vk_hat = [encrypt(int(qi), pub) for qi in q_v]
             iter_data = {
-                'zk_hat': zk_hat,   # 加密的z
-                'vk_hat': vk_hat,   # 加密的v
+                'zk_hat': zk_hat,
+                'vk_hat': vk_hat,
                 't': t,
             }
             send_to_edge(nodes[k]['host'], nodes[k]['port'],
@@ -275,7 +275,8 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
             ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, text=True)
             procs.append((proc, nodes[k]['host'], nodes[k]['port'], k))
 
-        for proc, host, port, idx in procs:
+        import threading
+        def drain(proc, host, port, idx):
             try:
                 for line in proc.stdout:
                     if line:
@@ -285,6 +286,11 @@ def run_distributed(A, y, nodes, K=3, rho=1.0, lam=1.0,
             proc.wait()
             if proc.returncode != 0:
                 print(f'[ssh returncode] {host}:{port} iter({idx}) -> {proc.returncode}')
+
+        drain_threads = [threading.Thread(target=drain, args=(p,h,port,idx))
+                         for p,h,port,idx in procs]
+        for th in drain_threads: th.start()
+        for th in drain_threads: th.join()
 
         # 收集结果并解密
         x_new = np.zeros(N)
