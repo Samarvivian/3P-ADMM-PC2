@@ -26,14 +26,19 @@
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', 'Poppins', 'Roboto', system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #e8f0ff 0%, #f5f7fa 50%, #e2e8f0 100%);
-            color: var(--text-dark);
-            font-size: 28px;
-        }
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', 'Poppins', 'Roboto', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    /* 替换原来的渐变背景 */
+    background-image: url('https://get.pxhere.com/photo/drone-camera-isolated-background-helicopter-technology-remote-surveillance-aerial-white-sky-control-fly-propeller-digital-drones-aircraft-copter-photo-robot-modern-military-flight-aviation-force-army-transport-vehicle-airplane-plane-airshow-war-video-blue-cloud-daytime-meteorological-phenomenon-cumulus-sunlight-air-travel-1446061.jpg'); /* 可换成你想要的无人机图片URL */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    color: var(--text-dark);
+    font-size: 28px;
+}
 
         /* 导航栏 - 无边框半透明 */
         .navbar {
@@ -306,13 +311,13 @@
 
         /* 登录容器 - 居中窄框 */
         .login-container {
-            max-width: 480px;
-            margin: 80px auto;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            border-radius: 32px;
-            padding: 48px;
-        }
+    max-width: 480px;
+    margin: 80px auto;
+    background: rgba(255, 255, 255, 0.85);  /* 原来是 0.7，调低透明度让背景图更明显 */
+    backdrop-filter: blur(8px);              /* 保持毛玻璃效果，可选 */
+    border-radius: 32px;
+    padding: 48px;
+}
 
         .auth-link {
             color: var(--primary-blue);
@@ -576,28 +581,28 @@
         e.preventDefault();
         const user = document.getElementById('username').value.trim();
         const pwd = document.getElementById('password').value;
+        // permissive login: accept any non-empty credentials (UI-only)
         if (!user || !pwd) {
             authError.innerText = '用户名和密码不能为空';
-            return;
-        }
-        const stored = localStorage.getItem('user_' + user);
-        if (!stored || stored !== pwd) {
-            authError.innerText = '用户名或密码错误';
             return;
         }
         authContainer.style.display = 'none';
         mainContainer.style.display = 'block';
         localStorage.setItem('login_user', user);
         document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 已登录';
+        // start background pollers and load node list after successful login
+        try { loadNodes(); } catch (e) { console.debug('loadNodes failed', e); }
+        try { startPollers(); } catch (e) { console.debug('startPollers failed', e); }
     };
 
     window.onload = function() {
-        if (localStorage.getItem('login_user')) {
-            authContainer.style.display = 'none';
-            mainContainer.style.display = 'block';
-            document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 已登录';
-        }
-        loadNodes();
+        // Always show login/register on initial page load. Do not auto-login based on
+        // localStorage to avoid the auth UI flashing when backend becomes available.
+        try {
+            authContainer.style.display = 'block';
+            mainContainer.style.display = 'none';
+            document.getElementById('statusLabel').innerHTML = '<i class="fas fa-circle" style="color:#94a3b8;"></i> 未登录';
+        } catch (e) { /* ignore */ }
     };
 
     const apiUrl = "http://localhost:8000/api/upload_and_process/";
@@ -979,9 +984,32 @@
         }
     }
 
-    // start polling every second and run immediately once
-    setInterval(pollStatus, 1000);
-    pollStatus();
+    // polling interval IDs (started after login)
+    let pollStatusId = null;
+    let pollLogsId = null;
+    let pollGpuId = null;
+    let pollSystemId = null;
+
+    function startPollers() {
+        // avoid starting twice
+        if (pollStatusId !== null) return;
+        try {
+            pollStatus();
+        } catch (e) { /* ignore */ }
+        pollStatusId = setInterval(pollStatus, 1000);
+
+        try {
+            pollLogs();
+        } catch (e) { /* ignore */ }
+        pollLogsId = setInterval(pollLogs, 1000);
+
+        try {
+            pollGpuMetrics();
+            pollSystemMetrics();
+        } catch (e) { /* ignore */ }
+        pollGpuId = setInterval(pollGpuMetrics, 500);
+        pollSystemId = setInterval(pollSystemMetrics, 500);
+    }
 
     // Poll server logs and display
     async function pollLogs() {
@@ -1314,17 +1342,10 @@
             // ignore errors
         }
     }
-    // Setup charts after DOM loaded
+    // Setup charts after DOM loaded; do not start pollers until login
     window.addEventListener('DOMContentLoaded', () => {
-        setupGpuCharts();
-        setInterval(pollGpuMetrics, 500);
-        setInterval(pollSystemMetrics, 500);
-        pollGpuMetrics();
-        pollSystemMetrics();
+        try { setupGpuCharts(); } catch (e) { console.debug('setupGpuCharts failed', e); }
     });
-
-    // initial load
-    loadNodes();
 </script>
 </body>
 </html>
