@@ -422,7 +422,7 @@
     <!--<h2><i class="fas fa-shield-alt"></i> 特征数据上传与分布式隐私计算</h2>-->
 
     <div class="info-text">
-        <i class="fas fa-microchip"></i> 本系统面向无人机等物联网场景，集成了分布式隐私保护ADMM优化算法，聚焦于lasso算法，支持同态加密与高效数据处理。用户可上传特征数据，系统将自动完成分布式隐私计算并展示收敛曲线，保障数据安全与智能协作。Distributed edge network · Paillier homomorphic encryption · GPU-accelerated
+        <i class="fas fa-microchip"></i> 本系统面向无人机等物联网场景，集成了分布式隐私保护ADMM优化算法，聚焦于LASSO问题，支持同态加密与高效数据处理。用户可上传特征数据，系统将自动完成分布式隐私计算并展示收敛曲线，保障数据安全与智能协作。Distributed edge network · Paillier homomorphic encryption · GPU-accelerated
     </div>
 
     <div class="content-grid">
@@ -489,9 +489,31 @@
             </div>
             <div class="log-box-container">
                 <b><i class="fas fa-terminal"></i> 计算日志：</b>
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                    <button id="clearLogsBtn" class="btn" style="padding:6px 10px; font-size:12px;">清空日志</button>
+                    <span id="logStatus" style="font-size:12px; color:#9aa7c7"></span>
+                </div>
                 <pre id="logBox"></pre>
             </div>
             <div class="curve" id="curve"></div>
+            <h4 style="margin-top:18px;">GPU 指标</h4>
+            <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
+                <div style="flex:1;min-width:260px;">
+                    <canvas id="gpuUtilChart" style="width:100%;max-height:220px"></canvas>
+                </div>
+                <div style="flex:1;min-width:260px;">
+                    <canvas id="gpuMemChart" style="width:100%;max-height:220px"></canvas>
+                </div>
+            </div>
+            <h4 style="margin-top:18px;">系统指标（CPU / 内存）</h4>
+            <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
+                <div style="flex:1;min-width:260px;">
+                    <canvas id="cpuUtilChart" style="width:100%;max-height:220px"></canvas>
+                </div>
+                <div style="flex:1;min-width:260px;">
+                    <canvas id="ramChart" style="width:100%;max-height:220px"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -653,8 +675,8 @@
             document.getElementById('progressBg').style.display = 'none';
             document.getElementById('loading').style.display = 'none';
             document.getElementById('submitBtn').disabled = false;
-            document.getElementById('error').innerText = '网络错误或服务器无响应';
-            document.getElementById('logBox').innerText += '\n[系统] ✗ 网络错误或服务器无响应';
+            //document.getElementById('error').innerText = '网络错误或服务器无响应';
+            //document.getElementById('logBox').innerText += '\n[系统] ✗ 网络错误或服务器无响应';
             document.getElementById('statusLabel').innerHTML = '<i class="fas fa-plug" style="color:#dc2626;"></i> 连接失败';
         }
     };
@@ -860,6 +882,287 @@
     }
     setInterval(pollLogs, 1000);
     pollLogs();
+
+    // 清空日志功能
+    async function clearLogs() {
+        try {
+            document.getElementById('clearLogsBtn').disabled = true;
+            document.getElementById('logStatus').innerText = '清空中...';
+            const resp = await fetch('http://localhost:8000/api/logs/clear', { method: 'POST', mode: 'cors' });
+            if (!resp.ok) {
+                const txt = await resp.text();
+                document.getElementById('logStatus').innerText = '清空失败';
+                console.error('clear logs failed', txt);
+            } else {
+                // try to parse JSON response for status
+                try {
+                    const jd = await resp.json();
+                    if (jd && jd.status === 'ok') document.getElementById('logStatus').innerText = '已清空';
+                    else document.getElementById('logStatus').innerText = '已清空';
+                } catch (e) {
+                    document.getElementById('logStatus').innerText = '已清空';
+                }
+            }
+        } catch (e) {
+            console.error('clearLogs error', e);
+            document.getElementById('logStatus').innerText = '请求出错';
+        } finally {
+            document.getElementById('clearLogsBtn').disabled = false;
+            setTimeout(() => { document.getElementById('logStatus').innerText = ''; }, 1500);
+            // Refresh log display
+            pollLogs();
+        }
+    }
+    // 绑定按钮事件
+    document.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('clearLogsBtn');
+        if (btn) btn.onclick = clearLogs;
+    });
+
+    // GPU charts logic
+    let gpuUtilChart = null;
+    let gpuMemChart = null;
+    let gpuUtilData = [];
+    let gpuMemData = [];
+    let gpuLabels = [];
+    // System charts
+    let cpuUtilChart = null;
+    let ramChart = null;
+    let sysLabels = [];
+    let cpuData = [];
+    let ramData = [];
+    function setupGpuCharts() {
+        const utilCtx = document.getElementById('gpuUtilChart').getContext('2d');
+        const memCtx = document.getElementById('gpuMemChart').getContext('2d');
+        gpuUtilChart = new Chart(utilCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'GPU Utilization (%)',
+                    data: [],
+                    borderColor: '#16a34a',
+                    backgroundColor: 'rgba(34,197,94,0.08)',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#475569' } } },
+                scales: {
+                    x: { title: { display: true, text: '时间', color: '#475569' }, ticks: { color: '#475569' } },
+                    y: { title: { display: true, text: '利用率 (%)', color: '#475569' }, min: 0, max: 100, ticks: { color: '#475569' } }
+                }
+            }
+        });
+        gpuMemChart = new Chart(memCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'GPU Memory (MB)',
+                    data: [],
+                    borderColor: '#f59e42',
+                    backgroundColor: 'rgba(245,158,66,0.08)',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#475569' } } },
+                scales: {
+                    x: { title: { display: true, text: '时间', color: '#475569' }, ticks: { color: '#475569' } },
+                    y: { title: { display: true, text: '显存 (MB)', color: '#475569' }, min: 0, ticks: { color: '#475569' } }
+                }
+            }
+        });
+        // setup system charts
+        const cpuCtx = document.getElementById('cpuUtilChart').getContext('2d');
+        const ramCtx = document.getElementById('ramChart').getContext('2d');
+        cpuUtilChart = new Chart(cpuCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'CPU Utilization (%)', data: [], borderColor: '#FF9800', backgroundColor: 'rgba(255,152,0,0.08)', fill: true, tension: 0.3 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { title: { display: true, text: '时间' } }, y: { min: 0, max: 100, title: { display: true, text: 'CPU (%)' } } } }
+        });
+        ramChart = new Chart(ramCtx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'RAM Used (MB)',  // 改为 MB
+            data: [],
+            borderColor: '#4CAF50',
+            backgroundColor: 'rgba(76,175,80,0.08)',
+            fill: true,
+            tension: 0.3
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { title: { display: true, text: '时间' } },
+            y: {
+                title: { display: true, text: 'RAM (MB)' },  // 标题改为 MB
+                beginAtZero: true,
+                min: 0,
+                max: 300,  // 最大 300MB，显示到 300
+                ticks: {
+                    stepSize: 50,
+                    callback: function(value) {
+                        // 格式化显示为 0, 100MB, 200MB, 300MB
+                        if (value === 0) return '0';
+                        if (value === 100) return '100 MB';
+                        if (value === 200) return '200 MB';
+                        if (value === 300) return '300 MB';
+                        return value;
+                    }
+                },
+                afterBuildTicks: function(axis) {
+                    // 强制设置特定的刻度值
+                    axis.ticks = [
+                        { value: 0, label: '0' },
+                        { value: 100, label: '100 MB' },
+                        { value: 200, label: '200 MB' },
+                        { value: 300, label: '300 MB' }
+                    ];
+                }
+            }
+        }
+    }
+});
+    }
+    async function pollSystemMetrics() {
+    try {
+        const resp = await fetch('http://localhost:8000/api/system_metrics');
+        if (!resp.ok) return;
+        const j = await resp.json();
+        if (!j || !Array.isArray(j.metrics)) return;
+
+        sysLabels = j.metrics.map(s => {
+            let raw = Number(s.ts ?? s.timestamp ?? 0) || 0;
+            if (!raw) return '--:--:--';
+            if (raw < 1e11) raw = raw * 1000;
+            const d = new Date(raw);
+            return isNaN(d.getTime()) ? '--:--:--' : d.toLocaleTimeString();
+        });
+
+        cpuData = j.metrics.map(s => Number(s.cpu_util ?? s.cpu ?? 0));
+
+        // 将 GB 转换为 MB（乘以 1024）
+        ramData = j.metrics.map(s => {
+            let gbValue = Number(s.ram_used_gb ?? s.ram_used ?? 0);
+            return gbValue * 1024;  // 转换为 MB
+        });
+
+        if (cpuUtilChart && ramChart) {
+            cpuUtilChart.data.labels = sysLabels;
+            cpuUtilChart.data.datasets[0].data = cpuData;
+            cpuUtilChart.update('none');
+
+            // 直接更新 RAM 图表数据（MB 单位）
+            ramChart.data.labels = sysLabels;
+            ramChart.data.datasets[0].data = ramData;
+            ramChart.data.datasets[0].label = 'RAM Used (MB)';
+
+            // 保持您设置的固定 Y 轴范围
+            ramChart.options.scales.y.min = 0;
+            ramChart.options.scales.y.max = 300;
+            ramChart.options.scales.y.title.text = 'RAM (MB)';
+
+            ramChart.update('none');
+        }
+    } catch (e) {
+        // ignore
+    }
+
+    }
+    async function pollGpuMetrics() {
+        try {
+            const resp = await fetch('http://localhost:8000/api/gpu_metrics');
+            if (!resp.ok) return;
+            const j = await resp.json();
+            if (!j || !Array.isArray(j.metrics)) return;
+            // Accept both {ts, gpus...} or {timestamp, utilization, memory_used, ...} shapes
+            gpuLabels = j.metrics.map(m => {
+                let raw = Number(m.timestamp ?? m.ts ?? m.time ?? 0) || 0;
+                if (!raw) return '--:--:--';
+                // detect seconds vs milliseconds. If raw looks like seconds (<= 1e11), convert to ms.
+                let tms = raw;
+                if (raw < 1e11) {
+                    tms = raw * 1000;
+                }
+                const d = new Date(tms);
+                if (isNaN(d.getTime())) return '--:--:--';
+                return d.toLocaleTimeString();
+            });
+            gpuUtilData = j.metrics.map(m => {
+                const v = Number(m.utilization ?? m.util ?? m.gpu_util ?? m.gpu_utilization ?? 0);
+                return isNaN(v) ? 0 : v;
+            });
+            // Normalize memory values to MB. Accept bytes/KiB/MiB names if present.
+            gpuMemData = j.metrics.map(m => {
+                let raw = m.memory_used ?? m.memory_used_mb ?? m.mem_used ?? m.mem_used_mb ?? m.mem_used_bytes ?? m.memory_used_bytes ?? 0;
+                let v = Number(raw) || 0;
+                // Heuristics: if value looks like bytes (>1e6), convert to MB; if looks like KB (>1e3 && <1e6), convert to MB
+                if (v > 1e6) {
+                    v = v / (1024 * 1024); // bytes -> MB
+                } else if (v > 1e3 && v < 1e6) {
+                    v = v / 1024; // KB -> MB
+                }
+                return Math.round((isNaN(v) ? 0 : v) * 100) / 100; // 2 decimals
+            });
+            // Update charts
+            if (gpuUtilChart && gpuMemChart) {
+                gpuUtilChart.data.labels = gpuLabels;
+                gpuUtilChart.data.datasets[0].data = gpuUtilData;
+                gpuUtilChart.update('none');
+                gpuMemChart.data.labels = gpuLabels;
+                gpuMemChart.data.datasets[0].data = gpuMemData;
+                // Compute reasonable y.max (in MB): consider observed max and reported total
+                if (j.metrics.length) {
+                    // observed max used
+                    const observedMax = Math.max(...gpuMemData, 0);
+                    // extract any memory_total-like field and normalize to MB
+                    let reportedTotal = 0;
+                    for (const sample of j.metrics) {
+                        const cand = sample.memory_total_mb ?? sample.memory_total ?? sample.mem_total_mb ?? sample.memory_total_bytes ?? 0;
+                        const num = Number(cand) || 0;
+                        let norm = num;
+                        if (norm > 1e6) norm = norm / (1024 * 1024);
+                        else if (norm > 1e3 && norm < 1e6) norm = norm / 1024;
+                        reportedTotal = Math.max(reportedTotal, norm);
+                    }
+                    // choose max between observed*1.2 (with a small floor) and reported total
+                    const floor = Math.max(1, Math.ceil(observedMax * 1.2));
+                    const finalMax = Math.max(floor, Math.ceil(reportedTotal));
+                    // If finalMax is zero (no data), leave Chart.js to autoscale
+                    if (finalMax > 0) {
+                        gpuMemChart.options.scales.y.max = finalMax;
+                    }
+                }
+                gpuMemChart.update('none');
+            }
+        } catch (e) {
+            // ignore errors
+        }
+    }
+    // Setup charts after DOM loaded
+    window.addEventListener('DOMContentLoaded', () => {
+        setupGpuCharts();
+        setInterval(pollGpuMetrics, 500);
+        setInterval(pollSystemMetrics, 500);
+        pollGpuMetrics();
+        pollSystemMetrics();
+    });
 
     // initial load
     loadNodes();
