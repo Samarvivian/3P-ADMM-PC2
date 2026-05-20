@@ -1,93 +1,24 @@
 # 3P-ADMM-PC2：分布式隐私计算框架复现
 
-本项目实现了基于Paillier同态加密的分布式ADMM（交替方向乘子法）隐私计算框架，并结合GPU加速技术，支持大规模数据的高效分布式优化。项目包含中心化与分布式ADMM算法、同态加密与量化模块、GPU大整数运算加速、以及丰富的实验脚本，适用于多方协作、隐私保护和高性能计算等场景。用户可根据实际需求灵活选择计算模式，并通过实验脚本进行算法性能验证和效果对比。项目结构清晰，易于扩展和集成，能够为分布式优化与隐私计算提供高效、可扩展的解决方案。该项目已获得中国密码技术竞赛三等奖。
+该分支为3P-ADMM-PC2的web可视化应用，旨在帮助用户获得更好的交互体验，理解算法的运行机制。
 ---
-
+<img src="login.png" width="300" height="200">
+<img src="image.png" width="300" height="200">
+<img src="image1.png" width="300" height="200">
+---
 ## 目录
-
-- [项目背景](#项目背景)
-- [硬件环境](#硬件环境)
-- [项目结构](#项目结构)
+- [环境搭建](#环境搭建)
 - [快速开始](#快速开始)
-- [算法原理](#算法原理)
-- [实验结果](#实验结果)
-- [注意事项](#注意事项)
-
 ---
 
-## 项目背景
-
-本项目复现了3P-ADMM-PC2算法，该算法将分布式ADMM与Paillier同态加密结合，实现了在不泄露数据隐私的前提下完成分布式LASSO问题求解。核心思想是：
-
-- 主节点持有观测向量y和压缩矩阵A，将A按列分块分发给K个边缘节点
-- 边缘节点计算本地子问题，通过同态加密保护中间结果
-- 主节点完成全局z和v的更新，迭代收敛
-
-整个算法分三个阶段：初始化阶段、数据安全共享阶段、并行隐私计算阶段。
-
----
-
-## 硬件环境
+## 环境搭建
 
 | 节点 | 硬件 | 说明 |
 |------|------|------|
 | 主节点 | RTX A4000 GPU | 负责加密、解密、z/v更新 |
 | 边缘节点×3 | RTX A2000 GPU | 负责矩阵求逆、同态计算 |
 ### tips:本项目的分布式实验环境基于[矩池云](https://matpool.com)搭建，主节点与三台边缘节点均为矩池云GPU实例，通过矩池云提供的内网SSH互联，模拟真实的分布式边缘计算网络拓扑。
----
-
-## 项目结构
-
-```
-3p-admm-pc2/
-├── admm/
-│   ├── centralized.py          # 集中式ADMM（基准对比，需大内存）
-│   ├── distributed.py          # 标准分布式ADMM（无加密，对比基准）
-│   └── dp_admm.py              # 差分隐私ADMM（DP-ADMM对比）
-│
-├── crypto/
-│   ├── paillier.py             # Paillier同态加密核心
-│   │                           #   - 密钥生成（generate_keypair）
-│   │                           #   - 加解密（encrypt/decrypt）
-│   │                           #   - 同态加法（homo_add）
-│   │                           #   - 同态常数乘法（homo_mul_const）
-│   └── paillier_gpu.py         # GPU加速批量加密
-│                               #   - encrypt_batch_gpu: GPU算g^m，CPU算r^n
-│                               #   - encrypt_batch_gpu_fast: 预计算r^n（9240 OPS）
-│                               #   - encrypt_batch_gpu_crt: 分布式CRT版本
-│
-├── gpu/
-│   ├── cufft_modexp.cu         # cuFFT全GPU版ModExp（最优，10056 OPS）
-│   │                           #   使用Barrett Reduction + cuFFT大整数乘法
-│   └── reg_ntt_modexp_v3.cu    # 寄存器级NTT版ModExp（7260 OPS）
-│
-├── protocol/
-│   ├── master_node.py          # 主节点完整协议
-│   │                           #   - 密钥生成与分发
-│   │                           #   - 分发Ak给边缘节点触发矩阵求逆
-│   │                           #   - GPU批量加密alpha_k
-│   │                           #   - 每轮加密z/v发给边缘节点
-│   │                           #   - 收集密文解密反量化得到x
-│   │                           #   - 更新z和v
-│   ├── edge_worker.py          # 边缘节点迭代计算
-│   │                           #   - 量化z和v并加密
-│   │                           #   - 同态矩阵向量乘法：
-│   │                           #     小规模（Nk≤100）：完整矩阵，精确
-│   │                           #     大规模（Nk>100）：对角近似，高效
-│   └── edge_init.py            # 边缘节点初始化
-│                               #   - 接收Ak，计算Bk=(Ak^T*Ak+ρI)^{-1}
-│                               #   - 计算alpha_k=Bk*Ak^T*y
-│                               #   - 返回Bk和alpha_k给主节点
-│
-├── experiments/
-│   ├── test_distributed_pc2.py # 小规模验证（M=50, N=99, K=3）
-│   ├── test_large_scale.py     # 大规模实验（M=3000, N=27000, K=3）
-│   ├── fig6_mse.png            # MSE收敛曲线（对应论文Fig.6）
-│   └── results_large.npy       # 大规模实验数据
-│
-└── config.py                   # 节点SSH配置（每次开机后更新）
-```
-
+### 由于服务器资源不足，后期边缘节点配置临时改为Tesla V100，未对原有配置重新测试，但估计差别不会很大。
 ---
 
 ## 快速开始
@@ -144,125 +75,19 @@ for NODE in "edge1 host1 port1" "edge2 host2 port2" "edge3 host3 port3"; do
         root@$HOST:/mnt/3p-admm-pc2/protocol/
 done
 ```
-
-### 4. 运行实验
-
-小规模验证：
-```bash
-python3 experiments/test_distributed_pc2.py
+更进一步的配置请参照[连接](https://github.com/Samarvivian/3P-ADMM-PC2/blob/features/connect.md).
+### 4. 运行
+在服务器终端中启动服务：
 ```
-
-大规模实验（后台运行）：
-```bash
-nohup python3 -u experiments/test_large_scale.py > /tmp/exp_log.txt 2>&1 &
-tail -f /tmp/exp_log.txt
+uvicorn web_backend:app --host 0.0.0.0 --port 8000
 ```
-
----
-
-## 算法原理
-
-### ADMM迭代更新
-
-$$x_k^{(t)} = (A_k^T A_k + \rho I)^{-1}(A_k^T y + \rho(z_k^{(t-1)} - v_k^{(t-1)}))$$
-
-$$z^{(t)} = S_{\lambda/\rho}(v^{(t-1)} + x^{(t)})$$
-
-$$v^{(t)} = v^{(t-1)} + x^{(t)} - z^{(t)}$$
-
-其中 $B_k = (A_k^T A_k + \rho I)^{-1}$，$\alpha_k = B_k A_k^T y$，则 $x_k = \alpha_k + B_k \rho(z_k - v_k)$。
-
-### 量化方案（Theorem 1）
-
-为支持Paillier加密（只支持非负整数），对实数进行量化：
-
+同时开启监控，方便查看实验中的计算架构使用情况：
 ```
-Γ1(v) = floor(Δ² * (v - zmin) / (zmax - zmin)²)   # 用于alpha_k
-Γ2(v) = floor(Δ  * (v - zmin) / (zmax - zmin))      # 用于Bk, z, v
+GPU_MONITOR_BACKEND=http://127.0.0.1:8000 \
+> python3 experiments/monitor_gpu.py --interval 0.5 &
 ```
-
-本项目使用 Δ=10^10，ZMIN=-3.0，ZMAX=3.0。
-
-### 反量化公式
-
-小规模（完整矩阵，Nk≤100）：
+最后一步，在本机的终端进行ssh连接：
 ```
-correction = ZMIN + ZMIN*sum(zk-vk) + 2*ZMIN*B_rowsum - 2*ZMIN²*Nk
+ssh -p <端口号> -NL 8000:localhost:8000 root@<主机名>
 ```
-
-大规模（对角近似，Nk>100）：
-```
-correction = ZMIN * (1 + 2*(B_diag - ZMIN) + (zk - vk))
-```
-
-### GPU加速ModExp（Algorithm 2）
-
-将大整数模幂运算分解为多项式乘法，利用FFT加速：
-
-1. 大整数表示为base=65536进制的向量（长度L=128）
-2. 多项式乘法用cuFFT加速：O(L²) → O(L log L)
-3. Barrett Reduction替代除法模运算
-4. 批量任务并行处理
-
----
-
-## 实验结果
-
-### GPU加速ModExp性能
-
-| 实现 | OPS | 相对CPU |
-|------|-----|---------|
-| CPU（gmpy2） | 9885 | 基准 |
-| GPU串行v1 | 703 | 0.07x |
-| GPU NTT版 | 1246 | 0.13x |
-| GPU reg_ntt_v2 | 1589 | 0.16x |
-| GPU libntt2 | 6578 | 0.67x |
-| GPU reg_ntt_v3 | 7260 | 0.73x |
-| **GPU cuFFT版** | **10056** | **1.02x（超过CPU）** |
-
-
-### GPU批量加密性能（EP）
-
-| 方案 | OPS | 说明 |
-|------|-----|------|
-| CPU EP | 530 | 实时计算r^n |
-| GPU EP（预计算r^n） | 9240 | 加速比17.4x |
-
-
-### MSE验证
-
-**小规模（M=50, N=99, K=3）：**
-
-| 算法 | 最终MSE |
-|------|---------|
-| 标准Dis-ADMM | 0.111004 |
-| 3P-ADMM-PC2 | 0.111003 |
-| 差距 | **1e-6** |
-
-**大规模（M=3000, N=27000, K=3，sparsity=10%，λ=1，ρ=1）：**
-
-| 算法 | 最终MSE |
-|------|---------|
-| Dis-ADMM | 0.097331 |
-| 3P-ADMM-PC2 | 0.098265 |
-| 差距 | **9.34e-4** |
-
-两者MSE曲线几乎重合，证明加密引入的误差可以忽略。
-
----
-
-## 注意事项
-
-1. **每次开机**需重新编译`/tmp/lib_cufft.so`，并更新`config.py`中的节点配置
-2. **磁盘限制**：/mnt只有5GB，9000×9000的Bk矩阵每个619MB，实验后及时清理`/mnt/*.pkl`
-3. **ZMIN/ZMAX**：必须覆盖迭代过程中z和v的实际范围，设为[-3, 3]；若缩小范围会导致clip截断误差累积发散
-4. **大规模实验**：边缘节点负责矩阵求逆（9000×9000），主节点内存不足以处理
-5. **对角近似**：大规模下同态矩阵乘法计算量为O(Nk²)不可行，使用对角近似；当A为高斯随机矩阵时非对角元素/对角元素≈0.37%，近似误差可忽略
-
-
-## 项目署名
-### 本项目的作者及单位：
-
-### 项目名称（Project Name）：3P-ADMM-PC2
-### 项目作者（Author）：Weiwei Huang,Cancan Jin,Hao Liu,Tingwen Liu,Donghong Cai
-### 作者单位（Affiliation）：暨南大学网络空间安全学院（College of Cyber Security, Jinan University）
+接着打开前端，开始你的算法之旅吧！
