@@ -31,14 +31,15 @@
     font-family: 'Segoe UI', 'Poppins', 'Roboto', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
     /* 替换原来的渐变背景 */
-    background-image: url('https://get.pxhere.com/photo/drone-camera-isolated-background-helicopter-technology-remote-surveillance-aerial-white-sky-control-fly-propeller-digital-drones-aircraft-copter-photo-robot-modern-military-flight-aviation-force-army-transport-vehicle-airplane-plane-airshow-war-video-blue-cloud-daytime-meteorological-phenomenon-cumulus-sunlight-air-travel-1446061.jpg'); /* 可换成你想要的无人机图片URL */
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
+    /*background-image: url('https://get.pxhere.com/photo/drone-camera-isolated-background-helicopter-technology-remote-surveillance-aerial-white-sky-control-fly-propeller-digital-drones-aircraft-copter-photo-robot-modern-military-flight-aviation-force-army-transport-vehicle-airplane-plane-airshow-war-video-blue-cloud-daytime-meteorological-phenomenon-cumulus-sunlight-air-travel-1446061.jpg'); !* 可换成你想要的无人机图片URL *!*/
+    /*background-size: cover;*/
+    /*background-position: center;*/
+    /*background-attachment: fixed;*/
+    /*background-repeat: no-repeat;*/
     color: var(--text-dark);
     font-size: 28px;
 }
+
 
         /* 导航栏 - 无边框半透明 */
         .navbar {
@@ -312,12 +313,13 @@
         /* 登录容器 - 居中窄框 */
         .login-container {
     max-width: 480px;
-    margin: 80px auto;
-    background: rgba(255, 255, 255, 0.85);  /* 原来是 0.7，调低透明度让背景图更明显 */
-    backdrop-filter: blur(8px);              /* 保持毛玻璃效果，可选 */
+    margin: 40px auto;        /* 原来是 80px，改小让框在垂直方向占更多空间 */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
     border-radius: 32px;
-    padding: 48px;
+    padding: 150px 48px;       /* 原来是 48px，上下padding加大让框更高 */
 }
+
 
         .auth-link {
             color: var(--primary-blue);
@@ -331,13 +333,14 @@
 
         /* 页脚 */
         .footer {
-            text-align: center;
-            color: var(--text-light);
-            margin-top: 60px;
-            padding: 24px;
-            font-size: 0.8rem;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-        }
+    text-align: center;
+    color: #1e293b;        /* 原来是 var(--text-light) 即 #64748b，改深 */
+    margin-top: 60px;
+    padding: 24px;
+    font-size: 1rem;       /* 原来是 0.8rem，改大 */
+    font-weight: 600;      /* 加粗，可选 */
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
 
         /* 响应式 */
         @media (max-width: 768px) {
@@ -590,12 +593,17 @@
         mainContainer.style.display = 'block';
         localStorage.setItem('login_user', user);
         document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 已登录';
+        document.body.style.backgroundImage = "url('https://get.pxhere.com/photo/drone-camera-isolated-background-helicopter-technology-remote-surveillance-aerial-white-sky-control-fly-propeller-digital-drones-aircraft-copter-photo-robot-modern-military-flight-aviation-force-army-transport-vehicle-airplane-plane-airshow-war-video-blue-cloud-daytime-meteorological-phenomenon-cumulus-sunlight-air-travel-1446061.jpg')";
         // start background pollers and load node list after successful login
         try { loadNodes(); } catch (e) { console.debug('loadNodes failed', e); }
         try { startPollers(); } catch (e) { console.debug('startPollers failed', e); }
     };
 
     window.onload = function() {
+        document.body.style.backgroundImage = "url('https://tse3.mm.bing.net/th/id/OIP.riO_oloO77a2b8uFnEPtkwHaE7?r=0&cb=thfvnextfalcon&rs=1&pid=ImgDetMain&o=7&rm=3')";
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundPosition = "center";
+        document.body.style.backgroundAttachment = "fixed";
         // Always show login/register on initial page load. Do not auto-login based on
         // localStorage to avoid the auth UI flashing when backend becomes available.
         try {
