@@ -2,9 +2,9 @@
 
 该分支为3P-ADMM-PC2的web可视化应用，旨在帮助用户获得更好的交互体验，理解算法的运行机制。
 ---
-<img src="login.png" width="300" height="200">
-<img src="image.png" width="300" height="200">
-<img src="image1.png" width="300" height="200">
+<img src="login.png">
+<img src="image.png">
+<img src="image1.png">
 ---
 ## 目录
 - [环境搭建](#环境搭建)
@@ -90,4 +90,4 @@ GPU_MONITOR_BACKEND=http://127.0.0.1:8000 \
 ```
 ssh -p <端口号> -NL 8000:localhost:8000 root@<主机名>
 ```
-接着打开前端，开始你的算法之旅吧！
+最后打开前端，开始你的算法之旅吧！
