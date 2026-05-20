@@ -3,9 +3,10 @@
 该分支为3P-ADMM-PC2的web可视化应用，旨在帮助用户获得更好的交互体验，理解算法的运行机制。
 ---
 <img src="login.png">
-<img src="image.png">
+<img src="image2.png">
 <img src="image1.png">
----
+
+
 ## 目录
 - [环境搭建](#环境搭建)
 - [快速开始](#快速开始)
