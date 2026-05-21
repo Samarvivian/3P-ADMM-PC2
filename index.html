@@ -17,7 +17,7 @@
 
         :root {
             --primary-blue: #2563eb;
-            --primary-light: #3b82f6;
+            --primary-light: #1d4ed8;
             --primary-dark: #1d4ed8;
             --accent-cyan: #0891b2;
             --text-dark: #1e293b;
@@ -353,6 +353,34 @@
     </style>
 </head>
 <body>
+<div style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:linear-gradient(135deg,#e8f0ff 0%,#dbeafe 50%,#eff6ff 100%);"></div>
+<div style="position:fixed;top:50%;right:-40px;transform:translateY(-50%);z-index:0;opacity:0.4;pointer-events:none;">
+  <svg width="1500" height="1500" viewBox="0 0 680 500" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="340" cy="250" rx="45" ry="22" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="340" cy="250" rx="28" ry="14" fill="#1d4ed8" stroke="#1d4ed8" stroke-width="1"/>
+    <circle cx="340" cy="258" r="7" fill="#1e3a8a" stroke="#2563eb" stroke-width="1"/>
+    <circle cx="340" cy="258" r="3" fill="#2563eb"/>
+    <line x1="305" y1="238" x2="215" y2="148" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round"/>
+    <line x1="375" y1="238" x2="465" y2="148" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round"/>
+    <line x1="305" y1="262" x2="215" y2="352" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round"/>
+    <line x1="375" y1="262" x2="465" y2="352" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="190" cy="130" r="14" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="190" cy="130" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
+    <ellipse cx="190" cy="130" rx="6" ry="38" fill="#1d4ed8" opacity="0.5"/>
+    <circle cx="490" cy="130" r="14" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="490" cy="130" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
+    <ellipse cx="490" cy="130" rx="6" ry="38" fill="#1d4ed8" opacity="0.5"/>
+    <circle cx="190" cy="370" r="14" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="190" cy="370" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
+    <ellipse cx="190" cy="370" rx="6" ry="38" fill="#1d4ed8" opacity="0.5"/>
+    <circle cx="490" cy="370" r="14" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="490" cy="370" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
+    <ellipse cx="490" cy="370" rx="6" ry="38" fill="#1d4ed8" opacity="0.5"/>
+    <line x1="310" y1="268" x2="295" y2="295" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round"/>
+    <line x1="370" y1="268" x2="385" y2="295" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round"/>
+    <line x1="285" y1="295" x2="415" y2="295" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+</div>
 
 <div class="navbar">
     <!-- 左边无人机图标 -->
@@ -365,14 +393,14 @@
         <line x1="8" y1="12" x2="4" y2="12" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
         <line x1="16" y1="12" x2="20" y2="12" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
         <!-- 螺旋桨 -->
-        <line x1="12" y1="2" x2="9" y2="5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="12" y1="2" x2="15" y2="5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="12" y1="22" x2="9" y2="19" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="12" y1="22" x2="15" y2="19" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="2" y1="12" x2="5" y2="9" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="2" y1="12" x2="5" y2="15" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="22" y1="12" x2="19" y2="9" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="22" y1="12" x2="19" y2="15" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="2" x2="9" y2="5" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="2" x2="15" y2="5" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="22" x2="9" y2="19" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="22" x2="15" y2="19" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="5" y2="9" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="5" y2="15" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="12" x2="19" y2="9" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="12" x2="19" y2="15" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
         <!-- 相机 -->
         <circle cx="12" cy="14" r="1.5" fill="#ffffff"/>
         <!-- 起落架 -->
@@ -389,18 +417,45 @@
         <line x1="12" y1="16" x2="12" y2="20" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
         <line x1="8" y1="12" x2="4" y2="12" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
         <line x1="16" y1="12" x2="20" y2="12" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
-        <line x1="12" y1="2" x2="9" y2="5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="12" y1="2" x2="15" y2="5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="12" y1="22" x2="9" y2="19" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="12" y1="22" x2="15" y2="19" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="2" y1="12" x2="5" y2="9" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="2" y1="12" x2="5" y2="15" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="22" y1="12" x2="19" y2="9" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
-        <line x1="22" y1="12" x2="19" y2="15" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="2" x2="9" y2="5" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="2" x2="15" y2="5" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="22" x2="9" y2="19" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="22" x2="15" y2="19" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="5" y2="9" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="5" y2="15" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="12" x2="19" y2="9" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22" y1="12" x2="19" y2="15" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
         <circle cx="12" cy="14" r="1.5" fill="#ffffff"/>
         <line x1="9" y1="16" x2="8" y2="19" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
         <line x1="15" y1="16" x2="16" y2="19" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
     </svg>
+</div>
+<div style="position:fixed;bottom:-350px;left:-200px;z-index:0;opacity:0.4;pointer-events:none;">
+<svg width="1500" height="1500" viewBox="0 0 680 500" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="340" cy="250" rx="45" ry="22" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="340" cy="250" rx="28" ry="14" fill="#3b82f6" stroke="#1d4ed8" stroke-width="1"/>
+    <circle cx="340" cy="258" r="7" fill="#1e3a8a" stroke="#2563eb" stroke-width="1"/>
+    <circle cx="340" cy="258" r="3" fill="#2563eb"/>
+    <line x1="305" y1="238" x2="215" y2="148" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+    <line x1="375" y1="238" x2="465" y2="148" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+    <line x1="305" y1="262" x2="215" y2="352" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+    <line x1="375" y1="262" x2="465" y2="352" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="190" cy="130" r="14" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="190" cy="130" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
+    <ellipse cx="190" cy="130" rx="6" ry="38" fill="#3b82f6" opacity="0.5"/>
+    <circle cx="490" cy="130" r="14" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="490" cy="130" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
+    <ellipse cx="490" cy="130" rx="6" ry="38" fill="#3b82f6" opacity="0.5"/>
+    <circle cx="190" cy="370" r="14" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="190" cy="370" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
+    <ellipse cx="190" cy="370" rx="6" ry="38" fill="#3b82f6" opacity="0.5"/>
+    <circle cx="490" cy="370" r="14" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5"/>
+    <ellipse cx="490" cy="370" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
+    <ellipse cx="490" cy="370" rx="6" ry="38" fill="#3b82f6" opacity="0.5"/>
+    <line x1="310" y1="268" x2="295" y2="295" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+    <line x1="370" y1="268" x2="385" y2="295" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+    <line x1="285" y1="295" x2="415" y2="295" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+  </svg>
 </div>
 
 <!-- 登录容器 -->
@@ -581,34 +636,31 @@
     };
 
     loginForm.onsubmit = function(e) {
-    e.preventDefault();
-    const user = document.getElementById('username').value.trim();
-    const pwd = document.getElementById('password').value;
-    if (!user || !pwd) {
-        authError.innerText = '用户名和密码不能为空';
-        return;
-    }
-    const stored = localStorage.getItem('user_' + user);
-    if (!stored || stored !== pwd) {
-        authError.innerText = '用户名或密码错误，请重新输入';
-        document.getElementById('password').value = '';
-        document.getElementById('password').focus();
-        return;
-    }
-    authContainer.style.display = 'none';
-    mainContainer.style.display = 'block';
-    localStorage.setItem('login_user', user);
-    document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 已登录';
-    document.body.style.backgroundImage = "url('...')";
-    try { loadNodes(); } catch (e) { console.debug('loadNodes failed', e); }
-    try { startPollers(); } catch (e) { console.debug('startPollers failed', e); }
-};
+        e.preventDefault();
+        const user = document.getElementById('username').value.trim();
+        const pwd = document.getElementById('password').value;
+        if (!user || !pwd) {
+            authError.innerText = '用户名和密码不能为空';
+            return;
+        }
+        const stored = localStorage.getItem('user_' + user);
+        if (!stored || stored !== pwd) {
+            authError.innerText = '用户名或密码错误，请重新输入';
+            document.getElementById('password').value = '';
+            document.getElementById('password').focus();
+            return;
+        }
+        authContainer.style.display = 'none';
+        mainContainer.style.display = 'block';
+        localStorage.setItem('login_user', user);
+        document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 已登录';
+
+        try { loadNodes(); } catch (e) { console.debug('loadNodes failed', e); }
+        try { startPollers(); } catch (e) { console.debug('startPollers failed', e); }
+    };
 
     window.onload = function() {
-        document.body.style.backgroundImage = "url('https://tse3.mm.bing.net/th/id/OIP.riO_oloO77a2b8uFnEPtkwHaE7?r=0&cb=thfvnextfalcon&rs=1&pid=ImgDetMain&o=7&rm=3')";
-        document.body.style.backgroundSize = "cover";
-        document.body.style.backgroundPosition = "center";
-        document.body.style.backgroundAttachment = "fixed";
+        
         // Always show login/register on initial page load. Do not auto-login based on
         // localStorage to avoid the auth UI flashing when backend becomes available.
         try {
@@ -825,7 +877,7 @@
                 datasets: [{
                     label: 'MSE',
                     data: curve,
-                    borderColor: '#3b82f6',
+                    borderColor: '#1d4ed8',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     borderWidth: 3,
                     pointRadius: 3,
@@ -867,7 +919,7 @@
     //             datasets: [{
     //                 label: 'MSE',
     //                 data: curve,
-    //                 borderColor: '#3b82f6',
+    //                 borderColor: '#1d4ed8',
     //                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
     //                 borderWidth: 3,
     //                 pointRadius: 3,
