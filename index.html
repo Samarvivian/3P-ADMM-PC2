@@ -581,23 +581,28 @@
     };
 
     loginForm.onsubmit = function(e) {
-        e.preventDefault();
-        const user = document.getElementById('username').value.trim();
-        const pwd = document.getElementById('password').value;
-        // permissive login: accept any non-empty credentials (UI-only)
-        if (!user || !pwd) {
-            authError.innerText = '用户名和密码不能为空';
-            return;
-        }
-        authContainer.style.display = 'none';
-        mainContainer.style.display = 'block';
-        localStorage.setItem('login_user', user);
-        document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 已登录';
-        document.body.style.backgroundImage = "url('https://get.pxhere.com/photo/drone-camera-isolated-background-helicopter-technology-remote-surveillance-aerial-white-sky-control-fly-propeller-digital-drones-aircraft-copter-photo-robot-modern-military-flight-aviation-force-army-transport-vehicle-airplane-plane-airshow-war-video-blue-cloud-daytime-meteorological-phenomenon-cumulus-sunlight-air-travel-1446061.jpg')";
-        // start background pollers and load node list after successful login
-        try { loadNodes(); } catch (e) { console.debug('loadNodes failed', e); }
-        try { startPollers(); } catch (e) { console.debug('startPollers failed', e); }
-    };
+    e.preventDefault();
+    const user = document.getElementById('username').value.trim();
+    const pwd = document.getElementById('password').value;
+    if (!user || !pwd) {
+        authError.innerText = '用户名和密码不能为空';
+        return;
+    }
+    const stored = localStorage.getItem('user_' + user);
+    if (!stored || stored !== pwd) {
+        authError.innerText = '用户名或密码错误，请重新输入';
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+        return;
+    }
+    authContainer.style.display = 'none';
+    mainContainer.style.display = 'block';
+    localStorage.setItem('login_user', user);
+    document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 已登录';
+    document.body.style.backgroundImage = "url('...')";
+    try { loadNodes(); } catch (e) { console.debug('loadNodes failed', e); }
+    try { startPollers(); } catch (e) { console.debug('startPollers failed', e); }
+};
 
     window.onload = function() {
         document.body.style.backgroundImage = "url('https://tse3.mm.bing.net/th/id/OIP.riO_oloO77a2b8uFnEPtkwHaE7?r=0&cb=thfvnextfalcon&rs=1&pid=ImgDetMain&o=7&rm=3')";
