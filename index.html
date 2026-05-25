@@ -43,7 +43,7 @@
 
         /* 导航栏 - 无边框半透明 */
         .navbar {
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.07);
             backdrop-filter: blur(12px);
             padding: 24px 0;
             text-align: center;
@@ -52,8 +52,9 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            color: var(--primary-blue);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            color: #bfdbfe;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: none;
         }
 
         .navbar i {
@@ -106,22 +107,22 @@
 
         .control-panel {
             flex: 1.2;
-            min-width: 320px;
-            background: rgba(255, 255, 255, 0.55);
-            backdrop-filter: blur(8px);
+            min-width: 400px;
+            background: #f8fafc;
             border-radius: 28px;
-            padding: 32px;
+            padding: 40px;
             transition: all 0.3s ease;
             font-size: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
         }
 
         .visualization-panel {
             flex: 2;
-            min-width: 420px;
-            background: rgba(255, 255, 255, 0.55);
-            backdrop-filter: blur(8px);
+            min-width: 500px;
+            background: #f8fafc;
             border-radius: 28px;
-            padding: 32px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
         }
 
         /* 表单元素 */
@@ -312,13 +313,72 @@
 
         /* 登录容器 - 居中窄框 */
         .login-container {
-    max-width: 480px;
-    margin: 40px auto;        /* 原来是 80px，改小让框在垂直方向占更多空间 */
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-    border-radius: 32px;
-    padding: 150px 48px;       /* 原来是 48px，上下padding加大让框更高 */
-}
+            max-width: 900px;
+            margin: 0 auto;
+            background: transparent;
+            padding: 60px 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .login-page-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .login-page-title span {
+            font-size: 22px;
+            font-weight: 700;
+            color: #e2e8ff;
+            letter-spacing: 0.01em;
+        }
+        .login-card {
+            display: flex;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 0.5px solid rgba(255,255,255,0.15);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
+        .login-left {
+            flex: 1.1;
+            background: #1d4ed8;
+            padding: 140px 36px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-left-watermark {
+            position: absolute;
+            bottom: -28px;
+            right: -28px;
+            opacity: 0.06;
+            pointer-events: none;
+        }
+        .login-left h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.45;
+            margin: 0 0 14px 0;
+        }
+        .login-left p {
+            font-size: 18px;
+            color: rgba(255,255,255,0.68);
+            line-height: 1.75;
+            margin: 0;
+        }
+        .login-right {
+            flex: 1;
+            background: #ffffff;
+            backdrop-filter: blur(12px);
+            padding: 140px 38px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
 
 
         .auth-link {
@@ -350,37 +410,80 @@
             h2 { font-size: 1.6rem; }
             .info-text { font-size: 0.9rem; padding: 15px; }
         }
+        /* 日志模态框 */
+        .log-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .log-modal-overlay.active {
+            display: flex;
+        }
+        .log-modal {
+            background: #ffffff;
+            border-radius: 24px;
+            width: 90vw;
+            max-width: 1100px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+        }
+        .log-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 28px;
+            border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+            flex-shrink: 0;
+        }
+        .log-modal-header h3 {
+            color: #1e293b;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        .log-modal-close {
+            width: auto !important;
+            margin: 0 !important;
+            padding: 8px 16px !important;
+            font-size: 0.9rem !important;
+            border-radius: 12px !important;
+            background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+        }
+        .log-modal-body {
+            flex: 1;
+            overflow: auto;
+            padding: 20px 28px;
+            background: #f8fafc;
+        }
+        .log-modal-body pre {
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #475569;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .expand-log-btn {
+            width: auto !important;
+            margin: 0 !important;
+            padding: 6px 12px !important;
+            font-size: 12px !important;
+            border-radius: 10px !important;
+            background: linear-gradient(135deg, #0891b2, #0e7490) !important;
+        }
     </style>
 </head>
 <body>
-<div style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:linear-gradient(135deg,#e8f0ff 0%,#dbeafe 50%,#eff6ff 100%);"></div>
-<div style="position:fixed;top:50%;right:-40px;transform:translateY(-50%);z-index:0;opacity:0.4;pointer-events:none;">
-  <svg width="1500" height="1500" viewBox="0 0 680 500" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="340" cy="250" rx="45" ry="22" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
-    <ellipse cx="340" cy="250" rx="28" ry="14" fill="#1d4ed8" stroke="#1d4ed8" stroke-width="1"/>
-    <circle cx="340" cy="258" r="7" fill="#1e3a8a" stroke="#2563eb" stroke-width="1"/>
-    <circle cx="340" cy="258" r="3" fill="#2563eb"/>
-    <line x1="305" y1="238" x2="215" y2="148" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round"/>
-    <line x1="375" y1="238" x2="465" y2="148" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round"/>
-    <line x1="305" y1="262" x2="215" y2="352" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round"/>
-    <line x1="375" y1="262" x2="465" y2="352" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round"/>
-    <circle cx="190" cy="130" r="14" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
-    <ellipse cx="190" cy="130" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
-    <ellipse cx="190" cy="130" rx="6" ry="38" fill="#1d4ed8" opacity="0.5"/>
-    <circle cx="490" cy="130" r="14" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
-    <ellipse cx="490" cy="130" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
-    <ellipse cx="490" cy="130" rx="6" ry="38" fill="#1d4ed8" opacity="0.5"/>
-    <circle cx="190" cy="370" r="14" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
-    <ellipse cx="190" cy="370" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
-    <ellipse cx="190" cy="370" rx="6" ry="38" fill="#1d4ed8" opacity="0.5"/>
-    <circle cx="490" cy="370" r="14" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
-    <ellipse cx="490" cy="370" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
-    <ellipse cx="490" cy="370" rx="6" ry="38" fill="#1d4ed8" opacity="0.5"/>
-    <line x1="310" y1="268" x2="295" y2="295" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round"/>
-    <line x1="370" y1="268" x2="385" y2="295" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round"/>
-    <line x1="285" y1="295" x2="415" y2="295" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
-  </svg>
-</div>
+<div id="mainBgDiv" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:transparent;"></div>
 
 <div class="navbar">
     <!-- 左边无人机图标 -->
@@ -409,6 +512,7 @@
     </svg>
 
     无人机数据安全回传与分布式隐私计算平台
+    <a href="/performance" target="_blank" style="position:absolute;right:40px;top:50%;transform:translateY(-50%);background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:10px 22px;border-radius:12px;font-size:0.9rem;font-weight:600;text-decoration:none;"><i class="fas fa-tachometer-alt"></i> 性能分析</a>
 
     <!-- 右边无人机图标（镜像效果） -->
     <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-left: 15px;">
@@ -430,54 +534,55 @@
         <line x1="15" y1="16" x2="16" y2="19" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
     </svg>
 </div>
-<div style="position:fixed;bottom:-350px;left:-200px;z-index:0;opacity:0.4;pointer-events:none;">
-<svg width="1500" height="1500" viewBox="0 0 680 500" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="340" cy="250" rx="45" ry="22" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5"/>
-    <ellipse cx="340" cy="250" rx="28" ry="14" fill="#3b82f6" stroke="#1d4ed8" stroke-width="1"/>
-    <circle cx="340" cy="258" r="7" fill="#1e3a8a" stroke="#2563eb" stroke-width="1"/>
-    <circle cx="340" cy="258" r="3" fill="#2563eb"/>
-    <line x1="305" y1="238" x2="215" y2="148" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
-    <line x1="375" y1="238" x2="465" y2="148" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
-    <line x1="305" y1="262" x2="215" y2="352" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
-    <line x1="375" y1="262" x2="465" y2="352" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
-    <circle cx="190" cy="130" r="14" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5"/>
-    <ellipse cx="190" cy="130" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
-    <ellipse cx="190" cy="130" rx="6" ry="38" fill="#3b82f6" opacity="0.5"/>
-    <circle cx="490" cy="130" r="14" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5"/>
-    <ellipse cx="490" cy="130" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
-    <ellipse cx="490" cy="130" rx="6" ry="38" fill="#3b82f6" opacity="0.5"/>
-    <circle cx="190" cy="370" r="14" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5"/>
-    <ellipse cx="190" cy="370" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
-    <ellipse cx="190" cy="370" rx="6" ry="38" fill="#3b82f6" opacity="0.5"/>
-    <circle cx="490" cy="370" r="14" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5"/>
-    <ellipse cx="490" cy="370" rx="38" ry="6" fill="#2563eb" opacity="0.7"/>
-    <ellipse cx="490" cy="370" rx="6" ry="38" fill="#3b82f6" opacity="0.5"/>
-    <line x1="310" y1="268" x2="295" y2="295" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
-    <line x1="370" y1="268" x2="385" y2="295" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
-    <line x1="285" y1="295" x2="415" y2="295" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
-  </svg>
-</div>
+
 
 <!-- 登录容器 -->
-<div class="login-container" id="authContainer">
-    <h2 id="authTitle" style="margin-bottom: 30px;"><i class="fas fa-lock"></i> 用户登录</h2>
-    <form id="loginForm">
-        <label><i class="fas fa-user"></i> 用户名</label>
-        <input type="text" id="username" required autocomplete="username" placeholder="请输入用户名">
-        <label><i class="fas fa-key"></i> 密码</label>
-        <input type="password" id="password" required autocomplete="current-password" placeholder="请输入密码">
-        <button type="submit" id="loginBtn"><i class="fas fa-sign-in-alt"></i> 登录</button>
-    </form>
-    <form id="registerForm" style="display:none;">
-        <label><i class="fas fa-user-plus"></i> 用户名</label>
-        <input type="text" id="regUsername" required autocomplete="username" placeholder="请输入用户名">
-        <label><i class="fas fa-key"></i> 密码</label>
-        <input type="password" id="regPassword" required autocomplete="new-password" placeholder="请输入密码">
-        <button type="submit" id="registerBtn"><i class="fas fa-user-plus"></i> 注册</button>
-    </form>
-    <div class="error" id="authError"></div>
-    <div style="text-align: center; margin-top: 24px;">
-        <a href="#" id="toggleAuth" class="auth-link"><i class="fas fa-exchange-alt"></i> 没有账号？注册</a>
+<div class="login-container" id="authContainer" style="display:none;">
+    <div class="login-page-title">
+        <span style="font-size:22px; font-weight:800; color:#000000; letter-spacing:0.02em; white-space:nowrap;">「隐翼协算」——无人机数据安全回传与分布式隐私计算平台</span>
+    </div>
+    <div class="login-card">
+        <div class="login-left">
+            <h3>面向物联网的<br>分布式隐私计算系统</h3>
+            <p>集成 Paillier 同态加密与分布式 ADMM 优化算法，聚焦 LASSO 问题求解，支持多边缘节点协同计算，保障数据全程安全。</p>
+            <div class="login-left-watermark">
+                <svg width="180" height="180" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="4" fill="white"/>
+                    <line x1="12" y1="8" x2="12" y2="4" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="12" y1="16" x2="12" y2="20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="8" y1="12" x2="4" y2="12" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="16" y1="12" x2="20" y2="12" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="12" y1="2" x2="9" y2="5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="12" y1="2" x2="15" y2="5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="9" y1="16" x2="8" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="15" y1="16" x2="16" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="login-right">
+            <h2 id="authTitle" style="font-size:19px;font-weight:700;color:#0f172a;margin:0 0 4px 0;text-align:left;">
+                <i class="fas fa-lock"></i> 用户登录
+            </h2>
+            <p style="font-size:16px;color:#334155;margin:0 0 26px 0;">登录后进入分布式隐私计算主界面</p>
+            <form id="loginForm">
+                <label><i class="fas fa-user"></i> 用户名</label>
+                <input type="text" id="username" required autocomplete="username" placeholder="请输入用户名">
+                <label><i class="fas fa-key"></i> 密码</label>
+                <input type="password" id="password" required autocomplete="current-password" placeholder="请输入密码">
+                <button type="submit" id="loginBtn"><i class="fas fa-sign-in-alt"></i> 登录</button>
+            </form>
+            <form id="registerForm" style="display:none;">
+                <label><i class="fas fa-user-plus"></i> 用户名</label>
+                <input type="text" id="regUsername" required autocomplete="username" placeholder="请输入用户名">
+                <label><i class="fas fa-key"></i> 密码</label>
+                <input type="password" id="regPassword" required autocomplete="new-password" placeholder="请输入密码">
+                <button type="submit" id="registerBtn"><i class="fas fa-user-plus"></i> 注册</button>
+            </form>
+            <div class="error" id="authError"></div>
+            <div style="text-align:center;margin-top:16px;">
+                <a href="#" id="toggleAuth" class="auth-link"><i class="fas fa-exchange-alt"></i> 没有账号？注册</a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -490,7 +595,7 @@
     </div>
 
     <div class="content-grid">
-        <div class="control-panel">
+        <div class="control-panel" id="controlPanel">
             <form id="uploadForm">
                 <label><i class="fas fa-cloud-upload-alt"></i> 上传特征数据（支持npy/csv文件）</label>
                 <input type="file" id="dataFile" accept=".npy,.csv" required>
@@ -539,22 +644,32 @@
 
             <div class="result" id="result" style="display:none;"></div>
             <div class="error" id="error"></div>
+
         </div>
 
-        <div class="visualization-panel">
+        <div class="visualization-panel" id="vizPanel" style="display:none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <div>
                     <span class="chip" id="nodeCountChip"><i class="fas fa-microchip"></i> Nodes: --</span>
                     <span class="chip" id="finalMseChip"><i class="fas fa-chart-line"></i> Final MSE: --</span>
                 </div>
-                <div style="font-size: 0.8rem; color: var(--text-light);">
-                    <i class="fas fa-circle" style="color: #22c55e; font-size: 0.65rem;"></i> 实时状态：<span id="statusLabel">空闲</span>
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <div style="font-size: 0.8rem; color: var(--text-light);">
+                        <i class="fas fa-circle" style="color: #22c55e; font-size: 0.65rem;"></i> 实时状态：<span id="statusLabel">空闲</span>
+                    </div>
+                    <button id="exportAllBtn" onclick="exportAllCharts()" style="width:auto; margin:0; padding:8px 18px; font-size:0.85rem; border-radius:12px; background:linear-gradient(135deg,#059669,#047857);">
+                        <i class="fas fa-download"></i> 导出全部图表
+                    </button>
+                    <button id="exportSelectBtn" onclick="openExportModal()" style="width:auto; margin:0; padding:8px 18px; font-size:0.85rem; border-radius:12px; background:linear-gradient(135deg,#7c3aed,#6d28d9);">
+                        <i class="fas fa-sliders-h"></i> 选择导出
+                    </button>
                 </div>
             </div>
             <div class="log-box-container">
                 <b><i class="fas fa-terminal"></i> 计算日志：</b>
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
                     <button id="clearLogsBtn" class="btn" style="padding:6px 10px; font-size:12px;">清空日志</button>
+                    <button class="expand-log-btn" onclick="openLogModal()"><i class="fas fa-expand-alt"></i> 放大查看</button>
                     <span id="logStatus" style="font-size:12px; color:#9aa7c7"></span>
                 </div>
                 <pre id="logBox"></pre>
@@ -582,11 +697,94 @@
     </div>
 </div>
 
+<!-- 日志放大模态框 -->
+<div class="log-modal-overlay" id="logModalOverlay" onclick="closeLogModal(event)">
+    <div class="log-modal">
+        <div class="log-modal-header">
+            <h3><i class="fas fa-terminal"></i> 计算日志（完整）</h3>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <span id="modalLogStatus" style="font-size:13px; color:#64748b;"></span>
+                <button class="log-modal-close" onclick="closeLogModal()"><i class="fas fa-times"></i> 关闭</button>
+            </div>
+        </div>
+        <div class="log-modal-body">
+            <pre id="modalLogBox"></pre>
+        </div>
+    </div>
+</div>
+
+<!-- 导出选择模态框 -->
+<div class="log-modal-overlay" id="exportModalOverlay" onclick="closeExportModal(event)">
+    <div class="log-modal" style="height:auto; max-width:520px;">
+        <div class="log-modal-header">
+            <h3><i class="fas fa-file-image"></i> 选择要导出的图表</h3>
+            <button class="log-modal-close" onclick="closeExportModal()"><i class="fas fa-times"></i> 关闭</button>
+        </div>
+        <div class="log-modal-body" style="background:#fff; padding:28px 32px;">
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <label style="margin:0; display:flex; align-items:center; gap:12px; font-size:1rem; cursor:pointer;">
+                    <input type="checkbox" id="chk_mse" checked style="width:18px;height:18px;">
+                    <i class="fas fa-chart-line" style="color:#1d4ed8;"></i> MSE 收敛曲线
+                </label>
+                <label style="margin:0; display:flex; align-items:center; gap:12px; font-size:1rem; cursor:pointer;">
+                    <input type="checkbox" id="chk_gpuUtil" checked style="width:18px;height:18px;">
+                    <i class="fas fa-microchip" style="color:#16a34a;"></i> GPU 利用率
+                </label>
+                <label style="margin:0; display:flex; align-items:center; gap:12px; font-size:1rem; cursor:pointer;">
+                    <input type="checkbox" id="chk_gpuMem" checked style="width:18px;height:18px;">
+                    <i class="fas fa-memory" style="color:#f59e42;"></i> GPU 显存用量
+                </label>
+                <label style="margin:0; display:flex; align-items:center; gap:12px; font-size:1rem; cursor:pointer;">
+                    <input type="checkbox" id="chk_cpu" checked style="width:18px;height:18px;">
+                    <i class="fas fa-tachometer-alt" style="color:#FF9800;"></i> CPU 利用率
+                </label>
+                <label style="margin:0; display:flex; align-items:center; gap:12px; font-size:1rem; cursor:pointer;">
+                    <input type="checkbox" id="chk_ram" checked style="width:18px;height:18px;">
+                    <i class="fas fa-hdd" style="color:#4CAF50;"></i> RAM 用量
+                </label>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:28px; align-items:center; flex-wrap:wrap;">
+                <span style="font-size:0.9rem; color:#475569;">导出格式：</span>
+                <label style="margin:0; display:flex; align-items:center; gap:6px; cursor:pointer; font-size:0.9rem;">
+                    <input type="radio" name="exportFmt" value="png" checked> PNG
+                </label>
+                <label style="margin:0; display:flex; align-items:center; gap:6px; cursor:pointer; font-size:0.9rem;">
+                    <input type="radio" name="exportFmt" value="jpg"> JPG
+                </label>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:24px;">
+                <button onclick="doSelectExport()" style="flex:1; margin:0; padding:14px; border-radius:14px; background:linear-gradient(135deg,#2563eb,#1d4ed8); font-size:1rem;">
+                    <i class="fas fa-download"></i> 确认导出
+                </button>
+                <button onclick="closeExportModal()" style="flex:1; margin:0; padding:14px; border-radius:14px; background:linear-gradient(135deg,#64748b,#475569); font-size:1rem;">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="footer">
     <i class="fas fa-copyright"></i> 2026 无人机数据安全回传与分布式隐私计算平台
 </div>
 
 <script>
+    function openLogModal() {
+        const overlay = document.getElementById('logModalOverlay');
+        const modalLog = document.getElementById('modalLogBox');
+        modalLog.innerText = document.getElementById('logBox').innerText;
+        overlay.classList.add('active');
+        setTimeout(() => {
+            const body = overlay.querySelector('.log-modal-body');
+            if (body) body.scrollTop = body.scrollHeight;
+        }, 50);
+    }
+
+    function closeLogModal(e) {
+        if (e && e.target !== document.getElementById('logModalOverlay')) return;
+        document.getElementById('logModalOverlay').classList.remove('active');
+    }
+
     // 登录注册逻辑
     const authContainer = document.getElementById('authContainer');
     const mainContainer = document.getElementById('mainContainer');
@@ -652,6 +850,10 @@
         }
         authContainer.style.display = 'none';
         mainContainer.style.display = 'block';
+        document.body.style.backgroundImage = 'none';
+        document.body.style.background = '#ffffff';
+        const bg = document.getElementById('mainBgDiv'); if(bg) bg.style.background='#ffffff';
+        document.querySelector('.navbar').style.display = 'block';
         localStorage.setItem('login_user', user);
         document.getElementById('statusLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e;"></i> 已登录';
 
@@ -660,13 +862,18 @@
     };
 
     window.onload = function() {
-        
+        // 登录页背景图
+        document.body.style.backgroundImage = "url('/static/drone_bg.jpg')";
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundAttachment = 'fixed';
+
         // Always show login/register on initial page load. Do not auto-login based on
         // localStorage to avoid the auth UI flashing when backend becomes available.
         try {
             authContainer.style.display = 'block';
             mainContainer.style.display = 'none';
-            document.getElementById('statusLabel').innerHTML = '<i class="fas fa-circle" style="color:#94a3b8;"></i> 未登录';
+                document.getElementById('statusLabel').innerHTML = '<i class="fas fa-circle" style="color:#94a3b8;"></i> 未登录';
         } catch (e) { /* ignore */ }
     };
 
@@ -694,6 +901,9 @@
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('logBox').innerText = '';
         document.getElementById('statusLabel').innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 计算中';
+        // 切换到可视化面板
+        document.getElementById('controlPanel').style.display = 'none';
+        document.getElementById('vizPanel').style.display = 'block';
 
         const fileInput = document.getElementById('dataFile');
         if (!fileInput.files.length) {
@@ -1128,6 +1338,15 @@
             });
 
             logBox.scrollTop = logBox.scrollHeight;
+            const modal = document.getElementById('logModalOverlay');
+            if (modal && modal.classList.contains('active')) {
+                const modalBox = document.getElementById('modalLogBox');
+                if (modalBox) {
+                    modalBox.innerText = document.getElementById('logBox').innerText;
+                    const body = modal.querySelector('.log-modal-body');
+                    if (body) body.scrollTop = body.scrollHeight;
+                }
+            }
         } catch (e) {
             console.debug('pollLogs error', e);
         }
@@ -1411,6 +1630,94 @@
     window.addEventListener('DOMContentLoaded', () => {
         try { setupGpuCharts(); } catch (e) { console.debug('setupGpuCharts failed', e); }
     });
+
+    // ========== 图表导出功能 ==========
+    const CHART_CONFIG = [
+        { id: 'mseChart',      chkId: 'chk_mse',     label: 'MSE收敛曲线'  },
+        { id: 'gpuUtilChart',  chkId: 'chk_gpuUtil',  label: 'GPU利用率'    },
+        { id: 'gpuMemChart',   chkId: 'chk_gpuMem',   label: 'GPU显存'      },
+        { id: 'cpuUtilChart',  chkId: 'chk_cpu',      label: 'CPU利用率'    },
+        { id: 'ramChart',      chkId: 'chk_ram',      label: 'RAM用量'      },
+    ];
+
+    function getExportFormat() {
+        const sel = document.querySelector('input[name="exportFmt"]:checked');
+        return sel ? sel.value : 'png';
+    }
+
+    function exportSingleChart(canvasId, filename, fmt) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) { console.warn('canvas not found:', canvasId); return false; }
+        const tmp = document.createElement('canvas');
+        tmp.width  = canvas.width;
+        tmp.height = canvas.height;
+        const tctx = tmp.getContext('2d');
+        tctx.fillStyle = '#ffffff';
+        tctx.fillRect(0, 0, tmp.width, tmp.height);
+        tctx.drawImage(canvas, 0, 0);
+        const mimeType = fmt === 'jpg' ? 'image/jpeg' : 'image/png';
+        const ext      = fmt === 'jpg' ? 'jpg' : 'png';
+        const dataUrl  = tmp.toDataURL(mimeType, 0.95);
+        const a = document.createElement('a');
+        a.href     = dataUrl;
+        a.download = `${filename}.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return true;
+    }
+
+    function exportAllCharts() {
+        const fmt = getExportFormat();
+        const ts  = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+        let count = 0;
+        CHART_CONFIG.forEach(cfg => {
+            setTimeout(() => { exportSingleChart(cfg.id, `${cfg.label}_${ts}`, fmt); }, count * 300);
+            count++;
+        });
+        showExportToast(`正在导出全部 ${CHART_CONFIG.length} 张图表...`);
+    }
+
+    function doSelectExport() {
+        const fmt = getExportFormat();
+        const ts  = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+        const selected = CHART_CONFIG.filter(cfg => {
+            const chk = document.getElementById(cfg.chkId);
+            return chk && chk.checked;
+        });
+        if (!selected.length) { showExportToast('请至少勾选一张图表', true); return; }
+        let delay = 0;
+        selected.forEach(cfg => {
+            setTimeout(() => { exportSingleChart(cfg.id, `${cfg.label}_${ts}`, fmt); }, delay);
+            delay += 300;
+        });
+        closeExportModal();
+        showExportToast(`正在导出 ${selected.length} 张图表...`);
+    }
+
+    function openExportModal() {
+        document.getElementById('exportModalOverlay').classList.add('active');
+    }
+
+    function closeExportModal(e) {
+        if (e && e.target !== document.getElementById('exportModalOverlay')) return;
+        document.getElementById('exportModalOverlay').classList.remove('active');
+    }
+
+    function showExportToast(msg, isError) {
+        let toast = document.getElementById('exportToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'exportToast';
+            toast.style.cssText = `position:fixed;bottom:36px;left:50%;transform:translateX(-50%);background:#1d4ed8;color:#fff;padding:14px 28px;border-radius:50px;font-size:0.95rem;font-weight:600;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,0.18);transition:opacity 0.4s ease;`;
+            document.body.appendChild(toast);
+        }
+        toast.style.background = isError ? '#dc2626' : '#1d4ed8';
+        toast.innerText = msg;
+        toast.style.opacity = '1';
+        clearTimeout(toast._tid);
+        toast._tid = setTimeout(() => { toast.style.opacity = '0'; }, 2800);
+    }
 </script>
 </body>
 </html>
