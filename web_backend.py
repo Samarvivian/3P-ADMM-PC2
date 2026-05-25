@@ -261,14 +261,39 @@ def root():
     return {"msg": "无人机数据安全回传与分布式隐私计算平台后端已启动"}
 
 
+@app.get('/static/{filename}')
+def static_file(filename: str):
+    import os
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', filename)
+    if not os.path.exists(path):
+        return JSONResponse({'error': 'not found'}, status_code=404)
+    return FileResponse(path)
+
+@app.get('/performance')
+def performance_page():
+    import os
+    idx = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'performance.html')
+    if not os.path.exists(idx):
+        return JSONResponse({'error': 'performance.html not found'}, status_code=404)
+    return FileResponse(idx, media_type='text/html')
+
 @app.get('/ui')
 def ui_index():
     """Serve the frontend index.html from the same origin to avoid file:// / CORS issues."""
     try:
-        base = os.path.dirname(__file__)
-        # index.html is in the project root; compute absolute path
-        idx = os.path.join(base, '..', 'index.html')
-        idx = os.path.abspath(idx)
+        # 支持直接运行和打包exe两种情况
+        base = os.path.dirname(os.path.abspath(__file__))
+        # 先找同级目录，再找上级目录
+        for candidate in [
+            os.path.join(base, 'index.html'),
+            os.path.join(base, '..', 'index.html'),
+            '/mnt/3p-admm-pc2/index.html',
+        ]:
+            if os.path.exists(candidate):
+                idx = os.path.abspath(candidate)
+                break
+        else:
+            idx = os.path.join(base, 'index.html')
         if not os.path.exists(idx):
             return JSONResponse({"error": "index.html not found", "path": idx}, status_code=404)
         return FileResponse(idx, media_type='text/html')
