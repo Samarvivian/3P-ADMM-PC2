@@ -85,7 +85,7 @@ uvicorn web_backend:app --host 0.0.0.0 --port 8000
 同时开启监控，方便查看实验中的计算架构使用情况：
 ```
 GPU_MONITOR_BACKEND=http://127.0.0.1:8000 \
-> python3 experiments/monitor_gpu.py --interval 0.5 &
+python3 experiments/monitor_gpu.py --interval 0.5 &
 ```
 最后一步，在本机的终端进行ssh连接：
 ```
