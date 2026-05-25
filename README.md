@@ -91,4 +91,8 @@ python3 experiments/monitor_gpu.py --interval 0.5 &
 ```
 ssh -p <端口号> -NL 8000:localhost:8000 root@<主机名>
 ```
-最后打开前端，开始你的算法之旅吧！
+最后打开前端
+```
+http://localhost:8000/ui
+```
+开始你的算法之旅吧！
