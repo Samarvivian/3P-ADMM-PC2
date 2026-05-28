@@ -150,6 +150,7 @@ pip install gmpy2 numpy fastapi uvicorn psutil pycryptodome
 | \`releases\` | Web可视化应用发布版本 |
 | \`master\` | 早期版本，存在中间变量未加密的漏洞，虽不适用使用但仍具有借鉴意义 |
 
+具体的web可视化部署界面可查看分支[releases](https://github.com/Samarvivian/3P-ADMM-PC2/tree/releases)
 
 ## 快速开始
 
@@ -367,3 +368,6 @@ $$\Gamma_2(v) = \left\lfloor \frac{\Delta \cdot (v - z_{min})}{z_{max} - z_{min}
 | 作者 | Weiwei Huang, Cancan Jin, Hao Liu, Tingwen Liu, Donghong Cai |
 | 单位 | 暨南大学网络空间安全学院（College of Cyber Security, Jinan University） |
 | 竞赛 | 第十届全国密码技术竞赛 国家三等奖 |
+
+
+欢迎各位提出issue！我随时在线！
