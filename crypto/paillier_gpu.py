@@ -156,6 +156,7 @@ def encrypt_batch_gpu_crt(messages, public_key, p, q, nodes):
         for j in range(4): m_all[:,j]=(mu64>>np.uint64(16*j))&np.uint64(0xFFFF)
     else:
         for i,m in enumerate(messages):
+            m = max(0, int(m))  # 防止负数
             b=m.to_bytes(LEN*2,'little')
             m_all[i]=np.frombuffer(b,dtype=np.uint16).astype(np.uint32).copy()
     m_all = np.ascontiguousarray(m_all)
@@ -291,6 +292,7 @@ def encrypt_batch_gpu_fast(messages, public_key, rn_precomputed=None):
         for j in range(4): m_all[:,j]=(mu64>>np.uint64(16*j))&np.uint64(0xFFFF)
     else:
         for i,m in enumerate(messages):
+            m = max(0, int(m))  # 防止负数
             b=m.to_bytes(LEN*2,'little')
             m_all[i]=np.frombuffer(b,dtype=np.uint16).astype(np.uint32).copy()
     m_all = np.ascontiguousarray(m_all)
@@ -306,3 +308,106 @@ def encrypt_batch_gpu_fast(messages, public_key, rn_precomputed=None):
 
     # 合并
     return [gm*rn%n2 for gm,rn in zip(gm_list,rn_precomputed)]
+
+
+def decrypt_batch_gpu(ciphers, private_key):
+    """
+    GPU批量解密
+    核心：批量计算 c^lambda mod n^2，然后CPU做L函数和乘mu
+    """
+    import time
+    lam, mu, n, n2 = private_key
+    N = len(ciphers)
+    lam_bits = int(lam).bit_length()
+
+    print(f'  GPU解密 {N}个，lambda={lam_bits}bits...')
+    t0 = time.time()
+
+    # GPU批量计算 c^lambda mod n^2
+    clam_list = gpu_batch_modexp(
+        [int(c) for c in ciphers],  # c_list
+        [int(lam)] * N,              # 所有任务用同一个lambda
+        n2,                          # 模数n^2
+        lam_bits
+    )
+    print(f'  GPU c^lambda完成: {time.time()-t0:.2f}s')
+
+    # CPU做L函数和乘mu（简单运算，很快）
+    t0 = time.time()
+    n_int = int(n)
+    mu_int = int(mu)
+    n2_int = int(n2)
+    results = []
+    for clam in clam_list:
+        Lval = (clam - 1) // n_int
+        m = Lval * mu_int % n_int
+        results.append(int(m))
+    print(f'  CPU L+mu完成: {time.time()-t0:.2f}s')
+    return results
+
+
+def decrypt_batch_gpu_crt(ciphers, private_key):
+    """
+    GPU CRT批量解密
+    利用CRT把c^lambda mod n^2拆成两个512bits的ModExp并行计算
+    理论加速4倍
+    """
+    import time, gmpy2
+    if len(private_key) == 6:
+        lam, mu, n, n2, p, q = private_key
+    else:
+        raise ValueError('需要包含p,q的私钥')
+
+    N = len(ciphers)
+    n_int = int(n); mu_int = int(mu); n2_int = int(n2)
+    p2 = int(p*p); q2 = int(q*q)
+
+    # CRT预计算
+    phi_p2 = p2 - p2//int(p)
+    phi_q2 = q2 - q2//int(q)
+    lam_p = int(lam) % phi_p2
+    lam_q = int(lam) % phi_q2
+    lam_p_bits = lam_p.bit_length()
+    lam_q_bits = lam_q.bit_length()
+
+    # c mod p2 和 c mod q2
+    cp_list = [int(c) % p2 for c in ciphers]
+    cq_list = [int(c) % q2 for c in ciphers]
+
+    print(f'  GPU CRT解密 {N}个，lam_p={lam_p_bits}bits, lam_q={lam_q_bits}bits...')
+    t0 = time.time()
+
+    # 并行计算两个小ModExp
+    import threading
+    clam_p = [None]; clam_q = [None]
+
+    def compute_p():
+        clam_p[0] = gpu_batch_modexp(cp_list, [lam_p]*N, p2, lam_p_bits)
+
+    def compute_q():
+        clam_q[0] = gpu_batch_modexp(cq_list, [lam_q]*N, q2, lam_q_bits)
+
+    t_p = threading.Thread(target=compute_p)
+    t_q = threading.Thread(target=compute_q)
+    t_p.start(); t_q.start()
+    t_p.join(); t_q.join()
+
+    print(f'  GPU c^lambda CRT完成: {time.time()-t0:.2f}s')
+
+    # CRT合并：c^lambda mod n2
+    t0 = time.time()
+    inv_p2_q2 = int(gmpy2.invert(p2, q2))
+    clam_list = []
+    for cp, cq in zip(clam_p[0], clam_q[0]):
+        # Garner公式
+        clam = (cp + (cq - cp) * inv_p2_q2 % q2 * p2) % n2_int
+        clam_list.append(clam)
+
+    # L函数和乘mu
+    results = []
+    for clam in clam_list:
+        Lval = (clam - 1) // n_int
+        m = Lval * mu_int % n_int
+        results.append(int(m))
+    print(f'  CRT合并+L+mu: {time.time()-t0:.2f}s')
+    return results
