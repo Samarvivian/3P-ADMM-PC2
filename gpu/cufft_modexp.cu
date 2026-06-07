@@ -2,9 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <cuda_runtime.h>
-#include <cufft.h>
-#include <math.h>
+#include "cuda_to_hip.h"
 
 #define BASE 65536ULL
 #define LEN 128
