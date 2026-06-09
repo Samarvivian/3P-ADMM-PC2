@@ -197,6 +197,12 @@ g++ -shared -fPIC \
 ls -lh /tmp/lib_cufft.so
 ```
 
+**Building for AMD GPUs (ROCm/HIP):** the same `/tmp/lib_cufft.so` (with the identical `init_gpu`/`run_modexp` C ABI, so the Python side is unchanged) can be built for AMD GPUs using `gpu/build_hip.sh`, which mirrors the nvcc recipe above with hipcc and hipFFT:
+```
+HIP_ARCH=gfx90a bash gpu/build_hip.sh
+```
+Set `HIP_ARCH` to the target architecture (for example `gfx90a` for CDNA2 / MI200, or `gfx1100` for RDNA3).
+
 ### 2. 更新节点配置
 
 每次开机后在矩池云控制台查看SSH地址和端口，更新`config.py`：
