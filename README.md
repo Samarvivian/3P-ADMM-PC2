@@ -203,6 +203,10 @@ HIP_ARCH=gfx90a bash gpu/build_hip.sh
 ```
 Set `HIP_ARCH` to the target architecture (for example `gfx90a` for CDNA2 / MI200, or `gfx1100` for RDNA3).
 
+## Special Thanks
+AMD GPU support (HIP/hipFFT port) contributed by [jeffdaily](https://github.com/jeffdaily).  
+非常感谢来自AMD的工程师 jeffdaily 为我们这个项目贡献了HIP/hipFFT移植支持!
+
 ### 2. 更新节点配置
 
 每次开机后在矩池云控制台查看SSH地址和端口，更新`config.py`：
